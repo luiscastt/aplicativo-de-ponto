@@ -13,7 +13,6 @@ import { UserPlus, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateUserResponse } from "@/types";
-import Sidebar from "@/components/Sidebar";
 
 interface UserFormData {
   first_name: string;
@@ -198,254 +197,248 @@ const Users = () => {
 
   if (!canCreate) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 p-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestão de Usuários</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center text-red-500">
-              <p>Acesso negado. Apenas gestores e admins podem gerenciar usuários.</p>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="p-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Gestão de Usuários</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center text-red-500">
+            <p>Acesso negado. Apenas gestores e admins podem gerenciar usuários.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 p-8">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
-            <p className="text-gray-600">Crie, edite e gerencie contas de colaboradores.</p>
-          </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar Usuário
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Criar Novo Usuário</DialogTitle>
-                <DialogDescription>
-                  Preencha para criar conta completa (auth + profile). Senha mínima: 6 caracteres.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreateSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Nome Completo</Label>
-                  <Input id="first_name" name="first_name" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input id="password" name="password" type="password" minLength={6} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select name="role" defaultValue="colaborador">
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Selecione role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="colaborador">Colaborador</SelectItem>
-                      <SelectItem value="gestor">Gestor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Criando...
-                      </>
-                    ) : (
-                      "Criar Usuário"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+    <div className="p-8">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
+          <p className="text-gray-600">Crie, edite e gerencie contas de colaboradores.</p>
         </div>
-
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex gap-4 items-center">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou email..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10"
-                />
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Adicionar Usuário
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Usuário</DialogTitle>
+              <DialogDescription>
+                Preencha para criar conta completa (auth + profile). Senha mínima: 6 caracteres.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">Nome Completo</Label>
+                <Input id="first_name" name="first_name" required />
               </div>
-              <div className="text-sm text-muted-foreground">
-                Mostrando {users.length} de {total} usuários
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" required />
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Usuários</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input id="password" name="password" type="password" minLength={6} required />
               </div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum usuário encontrado. {searchTerm && 'Tente ajustar a busca.'}
-                <Button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} className="ml-2">
-                  Limpar Busca
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select name="role" defaultValue="colaborador">
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Selecione role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="colaborador">Colaborador</SelectItem>
+                    <SelectItem value="gestor">Gestor</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Criando...
+                    </>
+                  ) : (
+                    "Criar Usuário"
+                  )}
                 </Button>
-              </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Data de Criação</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((u: any) => (
-                      <TableRow key={u.id}>
-                        <TableCell className="font-medium">
-                          {u.first_name} {u.last_name || ''}
-                        </TableCell>
-                        <TableCell>{u.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>
-                            {u.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(u.updated_at || u.created_at).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                        <TableCell className="space-x-2">
-                          <Dialog open={isEditDialogOpen && editingUserId === u.id} onOpenChange={() => {
-                            if (!isEditDialogOpen) {
-                              setIsEditDialogOpen(false);
-                              setEditingUserId(null);
-                            }
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" onClick={() => handleEdit(u)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
-                              <DialogHeader>
-                                <DialogTitle>Editar {u.first_name}</DialogTitle>
-                                <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
-                              </DialogHeader>
-                              <form onSubmit={handleEditSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="edit_first_name">Nome Completo</Label>
-                                  <Input 
-                                    id="edit_first_name" 
-                                    name="first_name" 
-                                    defaultValue={editingUser?.first_name} 
-                                    required 
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Email (não editável)</Label>
-                                  <Input value={u.email} disabled className="bg-gray-100" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="edit_role">Role</Label>
-                                  <Select name="role" defaultValue={editingUser?.role || u.role}>
-                                    <SelectTrigger id="edit_role">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="colaborador">Colaborador</SelectItem>
-                                      <SelectItem value="gestor">Gestor</SelectItem>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <DialogFooter>
-                                  <Button type="submit" disabled={updateMutation.isPending}>
-                                    {updateMutation.isPending ? (
-                                      <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Salvando...
-                                      </>
-                                    ) : (
-                                      "Salvar Alterações"
-                                    )}
-                                  </Button>
-                                </DialogFooter>
-                              </form>
-                            </DialogContent>
-                          </Dialog>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleDelete(u.id, u.email)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                {totalPages > 1 && (
-                  <div className="flex justify-between items-center mt-6">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Anterior
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Página {currentPage} de {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Próxima
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex gap-4 items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10"
+              />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Mostrando {users.length} de {total} usuários
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Usuários</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum usuário encontrado. {searchTerm && 'Tente ajustar a busca.'}
+              <Button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} className="ml-2">
+                Limpar Busca
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Data de Criação</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((u: any) => (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">
+                        {u.first_name} {u.last_name || ''}
+                      </TableCell>
+                      <TableCell>{u.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>
+                          {u.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(u.updated_at || u.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell className="space-x-2">
+                        <Dialog open={isEditDialogOpen && editingUserId === u.id} onOpenChange={() => {
+                          if (!isEditDialogOpen) {
+                            setIsEditDialogOpen(false);
+                            setEditingUserId(null);
+                          }
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" onClick={() => handleEdit(u)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>Editar {u.first_name}</DialogTitle>
+                              <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleEditSubmit} className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="edit_first_name">Nome Completo</Label>
+                                <Input 
+                                  id="edit_first_name" 
+                                  name="first_name" 
+                                  defaultValue={editingUser?.first_name} 
+                                  required 
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Email (não editável)</Label>
+                                <Input value={u.email} disabled className="bg-gray-100" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="edit_role">Role</Label>
+                                <Select name="role" defaultValue={editingUser?.role || u.role}>
+                                  <SelectTrigger id="edit_role">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="colaborador">Colaborador</SelectItem>
+                                    <SelectItem value="gestor">Gestor</SelectItem>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <DialogFooter>
+                                <Button type="submit" disabled={updateMutation.isPending}>
+                                  {updateMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Salvando...
+                                    </>
+                                  ) : (
+                                    "Salvar Alterações"
+                                  )}
+                                </Button>
+                              </DialogFooter>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDelete(u.id, u.email)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

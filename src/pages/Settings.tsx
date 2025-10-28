@@ -101,7 +101,7 @@ const Settings = () => {
 
   if (!user || (user.role !== "gestor" && user.role !== "admin")) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="flex items-center justify-center p-4 h-full min-h-[50vh]">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-center">Acesso Negado</CardTitle>
@@ -118,7 +118,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="p-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center space-x-3">
           <SettingsIcon className="h-6 w-6 text-blue-600" />

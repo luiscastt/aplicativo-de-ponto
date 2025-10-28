@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import Sidebar from "@/components/Sidebar";
 import { showError } from "@/utils/toast";
 import PointRegistration from "@/components/PointRegistration";
 import type { Profile } from "@/types";
@@ -43,11 +42,8 @@ const Dashboard = () => {
 
   if (profileLoading || isLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 p-8 flex justify-center items-center">
-          <div>Carregando dashboard...</div>
-        </div>
+      <div className="flex justify-center items-center h-full min-h-[50vh]">
+        <div>Carregando dashboard...</div>
       </div>
     );
   }
@@ -69,37 +65,35 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 p-8">
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">
+          Bem-vindo, {user?.first_name || user?.email?.split('@')[0] || 'Usuário'}
+        </h1>
+        <p className="text-gray-600">
+          {isColaborador ? "Registre seu ponto abaixo." : "Monitore registros dos colaboradores."}
+        </p>
+        
+        {debugRoleBadge}
+      </div>
+
+      {isColaborador && (
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">
-            Bem-vindo, {user?.first_name || user?.email?.split('@')[0] || 'Usuário'}
-          </h1>
-          <p className="text-gray-600">
-            {isColaborador ? "Registre seu ponto abaixo." : "Monitore registros dos colaboradores."}
-          </p>
-          
-          {debugRoleBadge}
+          <PointRegistration />
         </div>
+      )}
 
-        {isColaborador && (
-          <div className="mb-8">
-            <PointRegistration />
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Registros Recentes</CardTitle>
+            <p className="text-sm text-muted-foreground">Últimos 10 pontos registrados</p>
           </div>
-        )}
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Registros Recentes</CardTitle>
-              <p className="text-sm text-muted-foreground">Últimos 10 pontos registrados</p>
-            </div>
-            <Button onClick={() => refetch()} variant="outline" size="sm">
-              Atualizar
-            </Button>
-          </CardHeader>
-          <CardContent>
+          <Button onClick={() => refetch()} variant="outline" size="sm">
+            Atualizar
+          </Button>
+        </CardHeader>
+        <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -152,9 +146,8 @@ const Dashboard = () => {
                 )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
