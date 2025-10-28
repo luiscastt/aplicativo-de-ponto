@@ -20,7 +20,7 @@ const Reports = () => {
           <CardTitle className="text-card-foreground">Visão Geral</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Aqui serão exibidos gráficos e tabelas de relatórios de ponto.</p>
+          <p className="text-muted-foreground text-left">Aqui serão exibidos gráficos e tabelas de relatórios de ponto.</p>
         </CardContent>
       </Card>
     </div>

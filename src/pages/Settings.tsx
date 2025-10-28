@@ -109,12 +109,12 @@ const Settings = () => {
       <div className="max-w-2xl space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-card-foreground">Geofence</CardTitle>
-            <CardDescription>Definir área permitida para registro de pontos</CardDescription>
+            <CardTitle className="text-card-foreground text-left">Geofence</CardTitle>
+            <CardDescription className="text-left">Definir área permitida para registro de pontos</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Centro da Área (Latitude, Longitude)</Label>
+              <Label className="text-left block">Centro da Área (Latitude, Longitude)</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Input
@@ -138,7 +138,7 @@ const Settings = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Raio da Área (metros)</Label>
+              <Label className="text-left block">Raio da Área (metros)</Label>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <span className="text-sm font-medium w-20 flex-shrink-0 text-card-foreground">{settings?.geofence_radius ?? 100} m</span>
                 <Slider
@@ -156,12 +156,12 @@ const Settings = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-card-foreground">Tolerâncias</CardTitle>
-            <CardDescription>Configurações de tempo e validação</CardDescription>
+            <CardTitle className="text-card-foreground text-left">Tolerâncias</CardTitle>
+            <CardDescription className="text-left">Configurações de tempo e validação</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Tolerância para Horário (minutos)</Label>
+              <Label className="text-left block">Tolerância para Horário (minutos)</Label>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <span className="text-sm font-medium w-20 flex-shrink-0 text-card-foreground">{settings?.tolerance_minutes ?? 15} min</span>
                 <Slider
@@ -179,12 +179,12 @@ const Settings = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-card-foreground">Armazenamento de Fotos</CardTitle>
-            <CardDescription>Período de retenção das imagens</CardDescription>
+            <CardTitle className="text-card-foreground text-left">Armazenamento de Fotos</CardTitle>
+            <CardDescription className="text-left">Período de retenção das imagens</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Dias de Retenção</Label>
+              <Label className="text-left block">Dias de Retenção</Label>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <span className="text-sm font-medium w-20 flex-shrink-0 text-card-foreground">{settings?.photo_retention_days ?? 30} dias</span>
                 <Slider

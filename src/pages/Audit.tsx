@@ -22,7 +22,7 @@ const Audit = () => {
           <CardTitle className="text-card-foreground">Logs de Atividade</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-left">
             {isGestorOrAdmin 
               ? "Aqui serão exibidos todos os logs de auditoria do sistema."
               : "Aqui serão exibidos seus logs de auditoria pessoal."

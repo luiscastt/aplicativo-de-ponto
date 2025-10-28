@@ -292,7 +292,7 @@ const Users = () => {
           <CardHeader>
             <CardTitle className="text-card-foreground">Gestão de Usuários</CardTitle>
           </CardHeader>
-          <CardContent className="text-center text-red-500">
+          <CardContent className="text-left text-red-500">
             <p>Acesso negado. Apenas gestores e admins podem gerenciar usuários.</p>
           </CardContent>
         </Card>
@@ -401,7 +401,7 @@ const Users = () => {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : users.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-left py-8 text-muted-foreground">
               Nenhum usuário encontrado. {searchTerm && 'Tente ajustar a busca.'}
               <Button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} className="ml-2" variant="link">
                 Limpar Busca
