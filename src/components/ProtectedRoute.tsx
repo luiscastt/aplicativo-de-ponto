@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Navigate, Outlet } => 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
