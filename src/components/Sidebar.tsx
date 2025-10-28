@@ -4,20 +4,21 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { Clock, MapPin, Camera, Settings, LogOut } from "lucide-react";
+import { Clock, MapPin, Camera, Settings, Users, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(!isMobile); // Aberto por default em desktop
+  const [isOpen, setIsOpen] = useState(!isMobile);
 
   const menuItems = [
     { path: "/dashboard", icon: Clock, label: "Dashboard" },
     { path: "/reports", icon: MapPin, label: "Relatórios" },
+    ...(user?.role === "gestor" || user?.role === "admin" ? [{ path: "/users", icon: Users, label: "Usuários" }] : []),
     { path: "/audit", icon: Camera, label: "Auditoria" },
-    { path: "/settings", icon: Settings, label: "Configurações" },
+    ...(user?.role === "gestor" || user?.role === "admin" ? [{ path: "/settings", icon: Settings, label: "Configurações" }] : []),
   ];
 
   return (

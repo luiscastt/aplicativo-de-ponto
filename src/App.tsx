@@ -10,15 +10,20 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Audit from "./pages/Audit";
-import Settings from "./pages/Settings"; // Nova importação
+import Settings from "./pages/Settings";
+import Users from "./pages/Users"; // Nova importação
 import NotFound from "./pages/NotFound";
 import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode; requiredRole?: "gestor" | "admin" }) => {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (requiredRole && user?.role !== requiredRole && user?.role !== "admin") {
+    return <Navigate to="/dashboard" />; // Redireciona se role insuficiente
+  }
+  return <>{children}</>;
 };
 
 const App = () => (
@@ -57,8 +62,16 @@ const App = () => (
           <Route
             path="/settings"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="gestor">
                 <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute requiredRole="gestor">
+                <Users />
               </ProtectedRoute>
             }
           />
