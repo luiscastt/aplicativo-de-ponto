@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
 import { useAuth } from "@/hooks/useAuth";
 import { Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { showSuccess } from "@/utils/toast";
+import Sidebar from "@/components/Sidebar"; // Nova importação
 
 // Mock data para relatórios (em produção, fetch de /reports/timesheet)
 const fetchReports = async (filters: { userId?: string; dateFrom: string; dateTo: string }) => {
@@ -60,9 +60,7 @@ const Reports = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="w-64 bg-white shadow-md p-4"> {/* Sidebar reutilizado do Dashboard */ }
-        {/* ... mesmo sidebar ... */}
-      </div>
+      <Sidebar />
       <div className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Relatórios de Jornadas</h1>

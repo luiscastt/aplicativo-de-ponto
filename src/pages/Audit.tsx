@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye } from "lucide-react";
-import { showError } from "@/utils/toast";
+import Sidebar from "@/components/Sidebar"; // Nova importação
 
 // Mock data para logs de auditoria
 const fetchAuditLogs = async () => {
@@ -44,9 +44,7 @@ const Audit = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="w-64 bg-white shadow-md p-4"> {/* Sidebar */ }
-        {/* ... sidebar ... */}
-      </div>
+      <Sidebar />
       <div className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Auditoria e Logs</h1>

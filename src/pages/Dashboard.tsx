@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import { Clock, MapPin, Camera } from "lucide-react";
+import Sidebar from "@/components/Sidebar"; // Nova importação
 import { showError } from "@/utils/toast";
 
 // Mock data para registros recentes (em produção, fetch de /point/recent)
@@ -35,8 +33,7 @@ const fetchRecentRecords = async () => {
 };
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { data: records, isLoading } = useQuery({
     queryKey: ["recentRecords"],
@@ -47,16 +44,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar simples */}
-      <div className="w-64 bg-white shadow-md p-4">
-        <h2 className="text-xl font-bold mb-4">Painel de Ponto</h2>
-        <ul className="space-y-2">
-          <li><Button variant="ghost" onClick={() => navigate("/dashboard")} className="w-full justify-start"><Clock className="mr-2 h-4 w-4" /> Dashboard</Button></li>
-          <li><Button variant="ghost" onClick={() => navigate("/reports")} className="w-full justify-start"><MapPin className="mr-2 h-4 w-4" /> Relatórios</Button></li>
-          <li><Button variant="ghost" onClick={() => navigate("/audit")} className="w-full justify-start"><Camera className="mr-2 h-4 w-4" /> Auditoria</Button></li>
-        </ul>
-        <Button variant="destructive" onClick={logout} className="w-full mt-8">Sair</Button>
-      </div>
+      <Sidebar />
       <div className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Bem-vindo, {user?.id}</h1>

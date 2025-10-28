@@ -10,8 +10,9 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Audit from "./pages/Audit";
+import Settings from "./pages/Settings"; // Nova importação
 import NotFound from "./pages/NotFound";
-import { useAuth } from "@/hooks/useAuth"; // Novo hook para auth
+import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Audit />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />
