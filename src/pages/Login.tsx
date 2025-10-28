@@ -43,10 +43,11 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted p-4">
       <Card className="w-full max-w-md shadow-2xl border-t-4 border-primary">
         <CardHeader className="space-y-4 pt-8">
           <div className="flex justify-center">
+            {/* A logo ainda não aparece, mas mantemos o caminho correto */}
             <img src="/logo.jpeg" alt="Logo da Empresa" className="h-16 w-auto" />
           </div>
           <CardTitle className="text-3xl text-center text-card-foreground">Acesso ao Painel</CardTitle>

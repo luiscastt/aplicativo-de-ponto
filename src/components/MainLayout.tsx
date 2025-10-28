@@ -10,7 +10,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 transition-all duration-300 p-4 sm:p-8 md:ml-64 md:p-8">
+      <main className="flex-1 transition-all duration-300 p-4 sm:p-8 md:ml-64 md:p-8 bg-background">
         {/* Adicionando padding superior para evitar que o conteúdo fique atrás do botão de menu mobile */}
         <div className="pt-12 md:pt-0">
           <Outlet />
