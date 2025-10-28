@@ -1,26 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from '@/hooks/useAuth';
 import { BarChart3 } from 'lucide-react';
 
 const Reports = () => {
-  const { user } = useAuth();
-  const isGestorOrAdmin = user?.role === 'gestor' || user?.role === 'admin';
-
-  if (!isGestorOrAdmin) {
-    return (
-      <div className="p-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Relatórios</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center text-red-500">
-            <p>Acesso negado. Apenas gestores e admins podem visualizar relatórios.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // O acesso já é garantido pelo ProtectedRoute para gestores/admins.
 
   return (
     <div className="p-8">

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, Save, MapPin, Clock, Image } from "lucide-react";
+import { Settings as SettingsIcon, Save } from "lucide-react";
 import type { Profile } from "@/types";
 
 interface CompanySettings {
@@ -24,19 +24,10 @@ const Settings = () => {
   const { user } = useAuth() as { user: Profile | null };
   const { toast } = useToast();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
-  const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  useEffect(() => {
-    if (settings) {
-      const timer = setTimeout(async () => {
-        if (updating) return;
-        await updateSettings();
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [settings, updating]);
+  // Removendo o useEffect que fazia update automático a cada 1s, pois isso pode ser caro e desnecessário.
+  // Vamos usar apenas o botão "Salvar Configurações".
 
   useEffect(() => {
     fetchSettings();
@@ -99,20 +90,10 @@ const Settings = () => {
     }
   };
 
-  if (!user || (user.role !== "gestor" && user.role !== "admin")) {
+  if (!settings) {
     return (
       <div className="flex items-center justify-center p-4 h-full min-h-[50vh]">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Acesso Negado</CardTitle>
-            <CardDescription className="text-center">
-              Apenas gestores e administradores podem acessar configurações.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button onClick={() => window.history.back()}>Voltar</Button>
-          </CardContent>
-        </Card>
+        <div className="text-gray-500">Carregando configurações...</div>
       </div>
     );
   }

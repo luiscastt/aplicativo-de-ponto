@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import PointRegistration from "@/components/PointRegistration";
 import type { Profile } from "@/types";
 
 // Fetch recent points
@@ -47,24 +46,16 @@ const Dashboard = () => {
     );
   }
 
-  const isColaborador = (user?.role || '').trim().toLowerCase() === "colaborador";
-
   return (
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">
-          Bem-vindo, {user?.first_name || user?.email?.split('@')[0] || 'Usuário'}
+          Bem-vindo, {user?.first_name || user?.email?.split('@')[0] || 'Gestor'}
         </h1>
         <p className="text-gray-600">
-          {isColaborador ? "Registre seu ponto abaixo." : "Monitore registros dos colaboradores."}
+          Monitore registros recentes dos colaboradores.
         </p>
       </div>
-
-      {isColaborador && (
-        <div className="mb-8">
-          <PointRegistration />
-        </div>
-      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

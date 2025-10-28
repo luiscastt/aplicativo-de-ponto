@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Clock, MapPin, Camera, Settings, Users, LogOut, Menu } from "lucide-react";
+import { Clock, BarChart3, Settings, Users, LogOut, Menu, ScrollText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
@@ -21,20 +21,13 @@ const Sidebar = () => {
       setIsOpen(true);
     }
   }, [isMobile]);
-
-  const normalizedRole = (user?.role || '').trim().toLowerCase();
-  const isGestorOrAdmin = normalizedRole === "gestor" || normalizedRole === "admin";
   
   const menuItems = [
     { path: "/dashboard", icon: Clock, label: "Dashboard" },
-    { path: "/reports", icon: MapPin, label: "Relatórios" },
-    ...(isGestorOrAdmin && user ? [
-      { path: "/users", icon: Users, label: "Usuários" }
-    ] : []),
-    { path: "/audit", icon: Camera, label: "Auditoria" },
-    ...(isGestorOrAdmin && user ? [
-      { path: "/settings", icon: Settings, label: "Configurações" }
-    ] : []),
+    { path: "/reports", icon: BarChart3, label: "Relatórios" },
+    { path: "/users", icon: Users, label: "Usuários" },
+    { path: "/audit", icon: ScrollText, label: "Auditoria" },
+    { path: "/settings", icon: Settings, label: "Configurações" },
   ];
 
   const handleNav = (path: string) => {
