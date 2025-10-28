@@ -98,10 +98,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({
       onOpenChange={(open) => {
         setIsEditDialogOpen(open);
         if (!open) {
-          // Limpa o estado de edição ao fechar
-          // Nota: handleEdit(user) aqui não faz sentido se o diálogo está fechando.
-          // A lógica de reset deve ser feita no componente pai (Users) ou garantindo que o estado
-          // de edição seja limpo quando o diálogo for fechado.
+          // A lógica de reset deve ser feita no componente pai (Users)
         }
       }}
     >
@@ -120,7 +117,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({
             <Label htmlFor="edit_first_name">Nome Completo</Label>
             <Input 
               id="edit_first_name" 
-              name="first_name" 
+              name="edit_first_name" // Corrigido o nome do campo para evitar conflito
               defaultValue={editingUser?.first_name} 
               required 
             />
@@ -131,7 +128,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit_role">Role</Label>
-            <Select name="role" defaultValue={editingUser?.role || user.role}>
+            <Select name="edit_role" defaultValue={editingUser?.role || user.role}>
               <SelectTrigger id="edit_role">
                 <SelectValue />
               </SelectTrigger>
@@ -259,7 +256,8 @@ const Users = () => {
       role: user.role,
     });
     setEditingUserId(user.id);
-    setIsEditDialogOpen(true);
+    // Não abrimos o diálogo aqui, pois ele é aberto pelo DialogTrigger.
+    // Apenas preparamos o estado.
   };
 
   const handleDelete = async (userId: string, email: string) => {
@@ -525,8 +523,8 @@ const Users = () => {
               )}
             </>
           )}
-        </Card>
-      </CardContent>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -187,8 +187,8 @@ const Dashboard = () => {
               ))
             )}
           </div>
-        </Card>
-      </CardContent>
+        </CardContent>
+      </Card>
     </div>
   );
 };
