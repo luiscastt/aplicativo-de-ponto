@@ -57,7 +57,7 @@ const PointRegistration = () => {
       const within = isWithinGeofence(newLocation, center, settings.geofence_radius);
       setGeofenceWarning(!within);
       if (!within) {
-        showError(`Aviso: Fora do geofence (${(calculateDistance(newLocation.lat, newLocation.lon, center.lat, center.lon).toFixed(0)}m). Registro pendente para aprovação.`);
+        showError(`Aviso: Fora do geofence (${calculateDistance(newLocation.lat, newLocation.lon, center.lat, center.lon).toFixed(0)}m). Registro pendente para aprovação.`);
       }
     }
   };
