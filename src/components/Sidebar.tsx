@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Clock, MapPin, Camera, Settings, Users, LogOut } from "lucide-react";
+import { Clock, MapPin, Camera, Settings, Users, LogOut, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
@@ -15,32 +15,16 @@ const Sidebar = () => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
 
-  // Re-render and log when user or loading changes
   useEffect(() => {
-    console.log('[DEBUG Sidebar] User updated:', user);
-    console.log('[DEBUG Sidebar] Profile loading:', profileLoading);
-    
-    if (user) {
-      const normalizedRole = (user.role || '').trim().toLowerCase();
-      console.log('[DEBUG Sidebar] Role analysis:', {
-        raw: user.role,
-        normalized: normalizedRole,
-        isGestor: normalizedRole === 'gestor',
-        isAdmin: normalizedRole === 'admin'
-      });
+    // Fecha a sidebar automaticamente ao mudar para desktop
+    if (!isMobile) {
+      setIsOpen(true);
     }
-  }, [user, profileLoading]);
+  }, [isMobile]);
 
   const normalizedRole = (user?.role || '').trim().toLowerCase();
   const isGestorOrAdmin = normalizedRole === "gestor" || normalizedRole === "admin";
   
-  console.log('[DEBUG Sidebar] Final checks:', {
-    role: normalizedRole,
-    isGestorOrAdmin,
-    userExists: !!user,
-    profileLoading
-  });
-
   const menuItems = [
     { path: "/dashboard", icon: Clock, label: "Dashboard" },
     { path: "/reports", icon: MapPin, label: "Relatórios" },
@@ -52,8 +36,6 @@ const Sidebar = () => {
       { path: "/settings", icon: Settings, label: "Configurações" }
     ] : []),
   ];
-
-  console.log('[DEBUG Sidebar] Generated menu items:', menuItems.map(item => item.label));
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -72,29 +54,22 @@ const Sidebar = () => {
 
   return (
     <>
-      <div className={`bg-white shadow-md transition-all duration-300 ${
-        isOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'
-      }`}>
+      {/* Sidebar Desktop/Mobile */}
+      <div className={`
+        bg-sidebar shadow-md transition-all duration-300 
+        ${isMobile ? 'fixed top-0 left-0 h-full z-40' : 'sticky top-0 h-screen'}
+        ${isOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}
+      `}>
         {isOpen && (
-          <>
-            {/* Debug badge - REMOVE AFTER TESTING */}
-            {process.env.NODE_ENV === 'development' && user && (
-              <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-                <strong>DEBUG Role:</strong> {user.role} 
-                <Badge variant={isGestorOrAdmin ? "default" : "secondary"} className="ml-2">
-                  {isGestorOrAdmin ? 'Gestor/Admin' : 'Colaborador'}
-                </Badge>
-              </div>
-            )}
-            
-            <h2 className="text-xl font-bold mb-4">Painel de Ponto</h2>
-            <ul className="space-y-2 mb-8">
+          <div className="flex flex-col h-full">
+            <h2 className="text-xl font-bold mb-6 text-sidebar-primary">Painel de Ponto</h2>
+            <ul className="space-y-2 flex-grow">
               {menuItems.map((item) => (
                 <li key={item.path}>
                   <Button
                     variant={isActive(item.path) ? "default" : "ghost"}
                     onClick={() => handleNav(item.path)}
-                    className="w-full justify-start"
+                    className={`w-full justify-start ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' : 'text-sidebar-foreground hover:bg-sidebar-accent'}`}
                   >
                     <item.icon className="mr-2 h-4 w-4" />
                     {item.label}
@@ -102,24 +77,40 @@ const Sidebar = () => {
                 </li>
               ))}
             </ul>
-            <Button variant="destructive" onClick={signOut} className="w-full">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
-            </Button>
-          </>
+            <div className="mt-auto pt-4 border-t border-sidebar-border">
+              <div className="text-sm text-sidebar-foreground mb-2 truncate">
+                {user?.first_name || user?.email}
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {user?.role}
+                </Badge>
+              </div>
+              <Button variant="destructive" onClick={signOut} className="w-full">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
+            </div>
+          </div>
         )}
       </div>
       
-      {/* Mobile toggle */}
+      {/* Mobile toggle button */}
       {isMobile && (
         <Button
           variant="outline"
-          size="sm"
+          size="icon"
           className="fixed top-4 left-4 z-50 bg-white shadow-lg"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {isOpen ? "Fechar" : "Menu"}
+          <Menu className="h-4 w-4" />
         </Button>
+      )}
+
+      {/* Overlay para fechar no mobile */}
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30" 
+          onClick={() => setIsOpen(false)}
+        />
       )}
     </>
   );

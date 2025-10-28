@@ -22,7 +22,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profileLoading, setProfileLoading] = useState(false);
 
   const fetchProfile = async (userId: string, retryCount = 0) => {
-    console.log(`[DEBUG] Fetching profile for user ID: ${userId} (retry ${retryCount})`);
     setProfileLoading(true);
     
     try {
@@ -33,12 +32,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
       
       if (error) {
-        console.error('[DEBUG] Profile fetch error:', error);
         setUser(null);
         setProfileLoading(false);
         
+        // Retry logic for common race condition error (PGRST116: row not found)
         if (retryCount < 3 && error.code === 'PGRST116') {
-          console.log('[DEBUG] Retrying profile fetch in 1s...');
           setTimeout(() => fetchProfile(userId, retryCount + 1), 1000);
         }
         return;
@@ -46,13 +44,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       const normalizedProfile = profile ? { 
         ...profile, 
-        role: (profile.role || 'colaborador').trim().toLowerCase() 
+        role: (profile.role || 'colaborador').trim().toLowerCase() as Profile['role']
       } : null;
       
-      console.log('[DEBUG] Profile fetched successfully:', normalizedProfile);
       setUser(normalizedProfile);
     } catch (err) {
-      console.error('[DEBUG] Unexpected profile fetch error:', err);
       setUser(null);
     } finally {
       setProfileLoading(false);
@@ -61,7 +57,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[DEBUG] Initial session:', !!session);
       setSession(session);
       setLoading(false);
       if (session?.user?.id) {
@@ -71,7 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log(`[DEBUG] Auth event: ${event}, session: ${!!session}`);
         setSession(session);
         setLoading(false);
         
@@ -97,12 +91,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
     setUser(null);
   };
-
-  console.log('[DEBUG] Auth state:', { 
-    isAuthenticated: !!session, 
-    userRole: user?.role, 
-    profileLoading 
-  });
 
   return (
     <AuthContext.Provider value={{ 

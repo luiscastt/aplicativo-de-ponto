@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { showError } from "@/utils/toast";
 import PointRegistration from "@/components/PointRegistration";
 import type { Profile } from "@/types";
 
@@ -50,20 +49,6 @@ const Dashboard = () => {
 
   const isColaborador = (user?.role || '').trim().toLowerCase() === "colaborador";
 
-  const debugRoleBadge = process.env.NODE_ENV === 'development' && user && (
-    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-      <strong>DEBUG - Role Atual:</strong> 
-      <Badge variant={(user.role === 'gestor' || user.role === 'admin') ? "default" : "secondary"} className="ml-2">
-        {user.role || 'N/A'}
-      </Badge>
-      {isColaborador ? (
-        <span className="ml-2 text-sm text-blue-600">(Modo Colaborador - sem menu extra)</span>
-      ) : (
-        <span className="ml-2 text-sm text-green-600">(Modo Gestor - deve ter menu extra)</span>
-      )}
-    </div>
-  );
-
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -73,8 +58,6 @@ const Dashboard = () => {
         <p className="text-gray-600">
           {isColaborador ? "Registre seu ponto abaixo." : "Monitore registros dos colaboradores."}
         </p>
-        
-        {debugRoleBadge}
       </div>
 
       {isColaborador && (
@@ -120,7 +103,13 @@ const Dashboard = () => {
                     </TableCell>
                     <TableCell>
                       {record.photoUrl ? (
-                        <img src={record.photoUrl} alt="Foto" className="w-8 h-8 rounded object-cover" />
+                        <a 
+                          href={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          <img src={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} alt="Foto" className="w-8 h-8 rounded object-cover hover:opacity-75 transition-opacity" />
+                        </a>
                       ) : (
                         <span className="text-xs text-muted-foreground">N/A</span>
                       )}
