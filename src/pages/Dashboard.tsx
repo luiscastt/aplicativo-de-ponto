@@ -9,11 +9,12 @@ import type { Profile } from "@/types";
 
 // Fetch recent points
 const fetchRecentRecords = async () => {
+  // Alterado de profiles!inner(...) para profiles(...) para usar LEFT JOIN por padrão.
   const { data, error } = await supabase
     .from('points')
     .select(`
       *,
-      profiles!inner(first_name, last_name, email)
+      profiles(first_name, last_name, email)
     `)
     .order('timestamp', { ascending: false })
     .limit(10);
