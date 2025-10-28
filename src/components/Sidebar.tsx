@@ -65,7 +65,8 @@ const Sidebar = () => {
           
           {/* Logo e Título */}
           <div className="mb-6 flex items-center space-x-2">
-            <img src="/logo.jpeg" alt="Logo da Empresa" className="h-10 w-auto object-contain" />
+            {/* Referência atualizada para logo.png */}
+            <img src="/logo.png" alt="Logo da Empresa" className="h-10 w-auto object-contain" />
             <h2 className="text-xl font-bold text-sidebar-foreground">Painel de Ponto</h2>
           </div>
           
