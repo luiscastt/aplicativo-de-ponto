@@ -216,7 +216,7 @@ const Users = () => {
     <div className="p-4 sm:p-0">
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Gestão de Usuários</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestão de Usuários</h1>
           <p className="text-sm text-gray-600">Crie, edite e gerencie contas de colaboradores.</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
