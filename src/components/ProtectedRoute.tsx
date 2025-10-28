@@ -27,9 +27,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const isGestorOrAdmin = user?.role === 'gestor' || user?.role === 'admin';
+  // Se a autenticação existe, mas o perfil falhou ao carregar (user é null), 
+  // forçamos o logout por segurança e para evitar loops.
+  if (!user) {
+    console.error("[ProtectedRoute] User is authenticated but profile is missing or failed to load. Forcing sign out.");
+    signOut();
+    toast({
+      variant: "destructive",
+      title: "Erro de Perfil",
+      description: "Não foi possível carregar seu perfil. Por favor, faça login novamente.",
+    });
+    return <Navigate to="/login" replace />;
+  }
+
+  const isGestorOrAdmin = user.role === 'gestor' || user.role === 'admin';
   
-  console.log(`[ProtectedRoute] User Role: ${user?.role}. Is Gestor/Admin: ${isGestorOrAdmin}`);
+  console.log(`[ProtectedRoute] User Role: ${user.role}. Is Gestor/Admin: ${isGestorOrAdmin}`);
 
   if (!isGestorOrAdmin) {
     // Se o usuário for um colaborador, ele não deve acessar o Painel Web.
