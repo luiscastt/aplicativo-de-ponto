@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"; // Added useEffect import
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Settings as SettingsIcon, Save, MapPin, Clock, Image } from "lucide-react";
+import type { Profile } from "@/types";
 
 interface CompanySettings {
   geofence_center: { lat: number; lng: number };
@@ -20,15 +21,14 @@ interface CompanySettings {
 }
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: Profile | null };
   const { toast } = useToast();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  useEffect(() => { // Now properly imported
+  useEffect(() => {
     if (settings) {
-      // Auto-save on slider change after debounce
       const timer = setTimeout(async () => {
         if (updating) return;
         await updateSettings();
@@ -36,7 +36,7 @@ const Settings = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [settings]);
+  }, [settings, updating]);
 
   useEffect(() => {
     fetchSettings();
@@ -49,7 +49,7 @@ const Settings = () => {
       .eq("id", "default")
       .single();
 
-    if (error && error.code !== "PGRST116") { // Not found error
+    if (error && error.code !== "PGRST116") {
       toast({
         variant: "destructive",
         title: "Erro ao carregar configurações",
@@ -58,7 +58,7 @@ const Settings = () => {
     }
 
     setSettings(data ?? {
-      geofence_center: { lat: -23.5505, lng: -46.6333 }, // Default São Paulo
+      geofence_center: { lat: -23.5505, lng: -46.6333 },
       geofence_radius: 100,
       tolerance_minutes: 15,
       photo_retention_days: 30,
@@ -99,7 +99,7 @@ const Settings = () => {
     }
   };
 
-  if (!user || user.role !== "gestor" && user.role !== "admin") {
+  if (!user || (user.role !== "gestor" && user.role !== "admin")) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <Card className="w-full max-w-md">
@@ -139,7 +139,7 @@ const Settings = () => {
                     type="number"
                     step="any"
                     value={settings?.geofence_center.lat ?? ""}
-                    onChange={(e) => setSettings((prev) => prev ? { ...prev, geofence_center: { ...prev.geofence_center, lat: parseFloat(e.target.value) } } : null)}
+                    onChange={(e) => setSettings((prev) => prev ? { ...prev, geofence_center: { ...prev.geofence_center, lat: parseFloat(e.target.value) || 0 } } : null)}
                     placeholder="Latitude"
                   />
                 </div>
@@ -148,7 +148,7 @@ const Settings = () => {
                     type="number"
                     step="any"
                     value={settings?.geofence_center.lng ?? ""}
-                    onChange={(e) => setSettings((prev) => prev ? { ...prev, geofence_center: { ...prev.geofence_center, lng: parseFloat(e.target.value) } } : null)}
+                    onChange={(e) => setSettings((prev) => prev ? { ...prev, geofence_center: { ...prev.geofence_center, lng: parseFloat(e.target.value) || 0 } } : null)}
                     placeholder="Longitude"
                   />
                 </div>

@@ -1,13 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
-import { Profile } from "@/types";
+import { Session } from "@supabase/supabase-js";
+import type { Profile } from "@/types";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: Profile | null;
   session: Session | null;
   loading: boolean;
+  profileLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -18,9 +19,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  const fetchProfile = async (userId: string) => {
-    console.log(`[DEBUG] Fetching profile for user ID: ${userId}`);
+  const fetchProfile = async (userId: string, retryCount = 0) => {
+    console.log(`[DEBUG] Fetching profile for user ID: ${userId} (retry ${retryCount})`);
+    setProfileLoading(true);
+    
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -29,28 +33,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
       
       if (error) {
-        console.error('[DEBUG] Error fetching profile:', error);
-        // Tente refetch uma vez se erro for 403 (RLS issue)
-        if (error.code === 'PGRST116' || error.message.includes('forbidden')) {
-          console.log('[DEBUG] Retrying profile fetch...');
-          setTimeout(() => fetchProfile(userId), 1000);
-        }
+        console.error('[DEBUG] Profile fetch error:', error);
         setUser(null);
+        setProfileLoading(false);
+        
+        if (retryCount < 3 && (error.code === 'PGRST116' || error.statusCode === 403)) {
+          console.log('[DEBUG] Retrying profile fetch in 1s...');
+          setTimeout(() => fetchProfile(userId, retryCount + 1), 1000);
+        }
         return;
       }
       
-      // Trim e normalize role para evitar issues
-      const normalizedProfile = profile ? { ...profile, role: (profile.role || '').trim().toLowerCase() } : null;
-      console.log('[DEBUG] Profile fetched and normalized:', normalizedProfile);
+      const normalizedProfile = profile ? { 
+        ...profile, 
+        role: (profile.role || 'colaborador').trim().toLowerCase() 
+      } : null;
+      
+      console.log('[DEBUG] Profile fetched successfully:', normalizedProfile);
       setUser(normalizedProfile);
     } catch (err) {
-      console.error('[DEBUG] Fetch error:', err);
+      console.error('[DEBUG] Unexpected profile fetch error:', err);
       setUser(null);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[DEBUG] Initial session:', !!session);
       setSession(session);
       setLoading(false);
       if (session?.user?.id) {
@@ -60,21 +71,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log(`[DEBUG] Auth event: ${event}`);
+        console.log(`[DEBUG] Auth event: ${event}, session: ${!!session}`);
         setSession(session);
         setLoading(false);
         
         if (session?.user?.id) {
           await fetchProfile(session.user.id);
-          // Extra check: Se user ainda null após 2s, refetch
-          setTimeout(() => {
-            if (!user) {
-              console.log('[DEBUG] User still null, forcing refetch...');
-              fetchProfile(session.user.id);
-            }
-          }, 2000);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          setProfileLoading(false);
         }
       }
     );
@@ -88,10 +93,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setUser(null);
   };
 
-  console.log('[DEBUG] Current auth state:', { isAuthenticated: !!session, userRole: user?.role });
+  console.log('[DEBUG] Auth state:', { 
+    isAuthenticated: !!session, 
+    userRole: user?.role, 
+    profileLoading 
+  });
 
   return (
     <AuthContext.Provider value={{ 
@@ -99,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user, 
       session, 
       loading,
+      profileLoading,
       signIn,
       signOut 
     }}>

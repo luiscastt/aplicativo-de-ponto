@@ -8,8 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
 import { showError } from "@/utils/toast";
 import PointRegistration from "@/components/PointRegistration";
+import type { Profile } from "@/types";
 
-// Fetch recent points (join com profiles para nome)
+// Fetch recent points
 const fetchRecentRecords = async () => {
   const { data, error } = await supabase
     .from('points')
@@ -32,7 +33,7 @@ const fetchRecentRecords = async () => {
 };
 
 const Dashboard = () => {
-  const { user, isAuthenticated, profileLoading } = useAuth();
+  const { user, isAuthenticated, profileLoading } = useAuth() as { user: Profile | null; isAuthenticated: boolean; profileLoading: boolean };
 
   const { data: records, isLoading, refetch } = useQuery({
     queryKey: ["recentRecords"],
@@ -53,7 +54,6 @@ const Dashboard = () => {
 
   const isColaborador = (user?.role || '').trim().toLowerCase() === "colaborador";
 
-  // Debug badge - REMOVE AFTER TESTING Sidebar ISSUE
   const debugRoleBadge = process.env.NODE_ENV === 'development' && user && (
     <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
       <strong>DEBUG - Role Atual:</strong> 
@@ -80,7 +80,6 @@ const Dashboard = () => {
             {isColaborador ? "Registre seu ponto abaixo." : "Monitore registros dos colaboradores."}
           </p>
           
-          {/* Debug badge */}
           {debugRoleBadge}
         </div>
 
@@ -123,7 +122,7 @@ const Dashboard = () => {
                     </TableCell>
                     <TableCell>{new Date(record.timestamp).toLocaleString("pt-BR")}</TableCell>
                     <TableCell className="font-mono text-xs">
-                      {`${record.location?.lat?.toFixed(4) || 'N/A'}, ${record.location?.lon?.toFixed(4) || 'N/A'}`}
+                      {`${record.location?.latitude?.toFixed(4) || 'N/A'}, ${record.location?.longitude?.toFixed(4) || 'N/A'}`}
                     </TableCell>
                     <TableCell>
                       {record.photoUrl ? (

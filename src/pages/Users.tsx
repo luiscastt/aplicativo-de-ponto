@@ -12,21 +12,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserPlus, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { CreateUserResponse } from "@/types";
+import type { CreateUserResponse } from "@/types";
 import Sidebar from "@/components/Sidebar";
 
 interface UserFormData {
   first_name: string;
   email: string;
-  password?: string; // Optional for edits
+  password?: string;
   role: "colaborador" | "gestor" | "admin";
 }
 
-const fetchUsers = async (searchTerm?: string, page = 1, pageSize = 10) => {
+interface UsersData {
+  users: any[];
+  total: number;
+}
+
+const fetchUsers = async (searchTerm?: string, page = 1, pageSize = 10): Promise<UsersData> => {
   let query = supabase
     .from('profiles')
-    .select('*', { count: 'exact' })
-    .range((page - 1) * pageSize, page * pageSize - 1)
+    .select('*', { count: 'exact', head: true })
     .order('first_name', { ascending: true });
 
   if (searchTerm?.trim()) {
@@ -34,7 +38,8 @@ const fetchUsers = async (searchTerm?: string, page = 1, pageSize = 10) => {
     query = query.or(`email.ilike.${search},first_name.ilike.${search},last_name.ilike.${search}`);
   }
 
-  const { data, error, count } = await query;
+  const rangeQuery = query.range((page - 1) * pageSize, page * pageSize - 1);
+  const { data, error, count } = await rangeQuery;
   if (error) throw error;
   return { users: data || [], total: count || 0 };
 };
@@ -58,9 +63,8 @@ const updateUserProfile = async (userId: string, data: Partial<UserFormData>) =>
     .eq('id', userId);
   if (error) throw error;
   
-  // Log the update
   await supabase.from('audit_logs').insert({
-    user_id: userId, // Updater's ID? Use current user if available
+    user_id: userId,
     action: 'perfil_atualizado',
     details: { updated_fields: Object.keys(data) }
   });
@@ -73,16 +77,19 @@ const Users = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserFormData | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const queryClient = useQueryClient();
 
-  const { data: { users = [], total = 0 }, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery<UsersData>({
     queryKey: ["users", searchTerm, currentPage],
     queryFn: () => fetchUsers(searchTerm, currentPage, pageSize),
-    keepPreviousData: true,
   });
+
+  const users = data?.users || [];
+  const total = data?.total || 0;
 
   const createMutation = useMutation({
     mutationFn: createUserViaFunction,
@@ -90,7 +97,7 @@ const Users = () => {
       if (response.success) {
         showSuccess(response.message || "Usuário criado com sucesso!");
         setIsCreateDialogOpen(false);
-        setSearchTerm(""); // Clear search to show new user
+        setSearchTerm("");
         queryClient.invalidateQueries({ queryKey: ["users"] });
       } else {
         showError(response.error || "Erro ao criar usuário.");
@@ -106,6 +113,7 @@ const Users = () => {
       showSuccess(response.message || "Perfil atualizado!");
       setIsEditDialogOpen(false);
       setEditingUser(null);
+      setEditingUserId(null);
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error: any) => showError(`Erro: ${error.message}`),
@@ -138,7 +146,7 @@ const Users = () => {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser) return;
+    if (!editingUser || !editingUserId) return;
 
     const updateData: Partial<UserFormData> = {
       first_name: (e.target as any).first_name.value.trim(),
@@ -150,7 +158,7 @@ const Users = () => {
       return;
     }
 
-    updateMutation.mutate({ userId: editingUserId!, data: updateData });
+    updateMutation.mutate({ userId: editingUserId, data: updateData });
   };
 
   const handleEdit = (user: any) => {
@@ -272,7 +280,6 @@ const Users = () => {
           </Dialog>
         </div>
 
-        {/* Search and Pagination */}
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex gap-4 items-center">
@@ -295,7 +302,6 @@ const Users = () => {
           </CardContent>
         </Card>
 
-        {/* Users Table */}
         <Card>
           <CardHeader>
             <CardTitle>Lista de Usuários</CardTitle>
@@ -341,7 +347,10 @@ const Users = () => {
                         </TableCell>
                         <TableCell className="space-x-2">
                           <Dialog open={isEditDialogOpen && editingUserId === u.id} onOpenChange={() => {
-                            if (!isEditDialogOpen) setIsEditDialogOpen(false);
+                            if (!isEditDialogOpen) {
+                              setIsEditDialogOpen(false);
+                              setEditingUserId(null);
+                            }
                           }}>
                             <DialogTrigger asChild>
                               <Button variant="ghost" size="sm" onClick={() => handleEdit(u)}>
@@ -409,7 +418,6 @@ const Users = () => {
                   </TableBody>
                 </Table>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex justify-between items-center mt-6">
                     <Button

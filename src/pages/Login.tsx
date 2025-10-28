@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,40 +76,6 @@ const Login = () => {
               {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
-
-          {/* Fallback Auth component for better integration, but using custom form above */}
-          <Auth
-            supabaseClient={supabase}
-            providers={[]}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                brand: '#6366f1',
-                brandButton: '#6366f1',
-                brandButtonText: '#ffffff',
-                defaultButtonBackground: '#ffffff',
-                defaultButtonBackgroundHover: '#f8fafc',
-                defaultButtonBorder: '#e2e8f0',
-                defaultButtonText: '#0f172a',
-                defaultButtonTextHover: '#0f172a',
-                dividerBackground: '#e2e8f0',
-                inputBackground: '#ffffff',
-                inputBorder: '#e2e8f0',
-                inputBorderHover: '#cbd5e1',
-                inputText: '#0f172a',
-                labelBackground: '#ffffff',
-                labelText: '#0f172a',
-                loaderColor: '#6366f1',
-                messageColor: '#0f172a',
-                anchorColor: '#6366f1',
-                anchorTextColor: '#6366f1',
-                anchorTextHoverColor: '#4f46e5',
-              },
-            }}
-            theme="light"
-            view="sign_in"
-            redirectTo={window.location.origin + "/dashboard"}
-          />
         </CardContent>
       </Card>
     </div>

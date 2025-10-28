@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Clock, Camera, Upload, CheckCircle, AlertCircle } from "lucide-react";
 import { showSuccess, showError, showLoading, dismissToast } from "@/utils/toast";
-import type { PointType } from "@/types";
+import type { PointType, ToastId } from "@/types";
 
 const PointRegistration = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const PointRegistration = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [geofenceWarning, setGeofenceWarning] = useState(false);
-  const toastId = showLoading("Obtendo localização...");
+  const toastId: ToastId = showLoading("Obtendo localização...");
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -45,7 +45,7 @@ const PointRegistration = () => {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
-  }, []);
+  }, [toastId]);
 
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -63,7 +63,7 @@ const PointRegistration = () => {
     if (!location || !user) return;
 
     setLoading(true);
-    const toastId = showLoading("Registrando ponto...");
+    const regToastId: ToastId = showLoading("Registrando ponto...");
 
     try {
       let photoUrl = null;
@@ -76,8 +76,7 @@ const PointRegistration = () => {
         photoUrl = data.path;
       }
 
-      // Check geofence (simplified - in real app, compare with company_settings)
-      const isWithinGeofence = true; // Placeholder logic
+      const isWithinGeofence = true;
       const status = isWithinGeofence ? "aprovado" : "pendente";
 
       const { error } = await supabase
@@ -97,14 +96,14 @@ const PointRegistration = () => {
 
       if (error) throw error;
 
-      showSuccess(`Ponto de ${type} registrado! ${geofenceWarning ? '(Pendente aprovação)' : '(Aprovado)'}`, { id: toastId });
+      showSuccess(`Ponto de ${type} registrado! ${geofenceWarning ? '(Pendente aprovação)' : '(Aprovado)'}`, { id: regToastId });
       setLocation(null);
       setPhoto(null);
       setPhotoPreview(null);
       setGeofenceWarning(false);
       navigate("/dashboard");
     } catch (error: any) {
-      showError(`Erro ao registrar: ${error.message}`, { id: toastId });
+      showError(`Erro ao registrar: ${error.message}`, { id: regToastId });
     } finally {
       setLoading(false);
     }
