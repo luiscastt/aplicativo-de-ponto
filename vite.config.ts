@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig(() => ({
-  base: "/aplicativo-de-ponto/", // Caminho base configurado para o subdiretório do GitHub Pages
+  base: "./", // Usando caminho base relativo para funcionar em qualquer subdiretório ou na raiz (ideal para HashRouter)
   server: {
     host: "::",
     port: 8080,
