@@ -9,7 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth(); // Fixed: use signOut instead of logout
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
 
@@ -40,7 +40,7 @@ const Sidebar = () => {
               </li>
             ))}
           </ul>
-          <Button variant="destructive" onClick={logout} className="w-full">
+          <Button variant="destructive" onClick={signOut} className="w-full"> {/* Fixed: use signOut */}
             <LogOut className="mr-2 h-4 w-4" />
             Sair
           </Button>

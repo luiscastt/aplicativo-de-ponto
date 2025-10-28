@@ -40,7 +40,8 @@ const Login = () => {
                 default: {
                   colors: {
                     brand: '#6366f1',
-                    brandContrast: '#ffffff',
+                    brandButton: '#6366f1',
+                    brandButtonText: '#ffffff',
                   },
                 },
               },

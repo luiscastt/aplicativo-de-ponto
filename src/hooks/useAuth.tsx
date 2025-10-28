@@ -9,7 +9,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<void>; // Added logout as signOut
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
