@@ -9,27 +9,27 @@ const Audit = () => {
 
   return (
     <div className="w-full">
-      {/* Título e Conteúdo Alinhados à Esquerda com Largura Limitada */}
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center space-x-3 mb-6">
+      {/* Título e Conteúdo Alinhados à Esquerda (usando o padding do MainLayout) */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-3">
           <ScrollText className="h-6 w-6 text-primary" />
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Auditoria de Registros</h1>
         </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-card-foreground">Logs de Atividade</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              {isGestorOrAdmin 
-                ? "Aqui serão exibidos todos os logs de auditoria do sistema."
-                : "Aqui serão exibidos seus logs de auditoria pessoal."
-              }
-            </p>
-          </CardContent>
-        </Card>
       </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-card-foreground">Logs de Atividade</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            {isGestorOrAdmin 
+              ? "Aqui serão exibidos todos os logs de auditoria do sistema."
+              : "Aqui serão exibidos seus logs de auditoria pessoal."
+            }
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

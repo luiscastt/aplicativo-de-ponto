@@ -97,13 +97,16 @@ const Settings = () => {
 
   return (
     <div className="w-full">
-      {/* Título e Conteúdo Alinhados à Esquerda com Largura Limitada */}
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center space-x-3 mb-6">
+      {/* Título e Conteúdo Alinhados à Esquerda (usando o padding do MainLayout) */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-3">
           <SettingsIcon className="h-6 w-6 text-primary" />
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configurações da Empresa</h1>
         </div>
+      </div>
 
+      {/* Aplicando um max-w menor apenas para o conteúdo de configurações, que é mais estreito */}
+      <div className="max-w-2xl space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-card-foreground">Geofence</CardTitle>

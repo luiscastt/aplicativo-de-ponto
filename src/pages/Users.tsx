@@ -199,7 +199,7 @@ const Users = () => {
 
   if (!canCreate) {
     return (
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <Card>
           <CardHeader>
             <CardTitle className="text-card-foreground">Gestão de Usuários</CardTitle>
@@ -214,181 +214,141 @@ const Users = () => {
 
   return (
     <div className="w-full">
-      {/* Título e Conteúdo Alinhados à Esquerda com Largura Limitada */}
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
-          <p className="text-sm text-muted-foreground">Crie, edite e gerencie contas de colaboradores.</p>
-        </div>
+      {/* Título e Conteúdo Alinhados à Esquerda (usando o padding do MainLayout) */}
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
+        <p className="text-sm text-muted-foreground">Crie, edite e gerencie contas de colaboradores.</p>
+      </div>
 
-        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="mt-4 sm:mt-0 w-full sm:w-auto">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar Usuário
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle className="text-card-foreground">Criar Novo Usuário</DialogTitle>
-                <DialogDescription>
-                  Preencha para criar conta completa (auth + profile). Senha mínima: 6 caracteres.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreateSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Nome Completo</Label>
-                  <Input id="first_name" name="first_name" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input id="password" name="password" type="password" minLength={6} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select name="role" defaultValue="colaborador">
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Selecione role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="colaborador">Colaborador</SelectItem>
-                      <SelectItem value="gestor">Gestor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Criando...
-                      </>
-                    ) : (
-                      "Criar Usuário"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-          {/* Removendo o flex-grow desnecessário aqui */}
-        </div>
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="mt-4 sm:mt-0 w-full sm:w-auto">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Adicionar Usuário
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="text-card-foreground">Criar Novo Usuário</DialogTitle>
+              <DialogDescription>
+                Preencha para criar conta completa (auth + profile). Senha mínima: 6 caracteres.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">Nome Completo</Label>
+                <Input id="first_name" name="first_name" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input id="password" name="password" type="password" minLength={6} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select name="role" defaultValue="colaborador">
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Selecione role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="colaborador">Colaborador</SelectItem>
+                    <SelectItem value="gestor">Gestor</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Criando...
+                    </>
+                  ) : (
+                    "Criar Usuário"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
-              <div className="flex-1 relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou email..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10"
-                />
-              </div>
-              <div className="text-sm text-muted-foreground flex-shrink-0">
-                Mostrando {users.length} de {total} usuários
-              </div>
-              <Button variant="outline" size="icon" onClick={() => refetch()} disabled={isLoading}>
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex-1 relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10"
+              />
+            </div>
+            <div className="text-sm text-muted-foreground flex-shrink-0">
+              Mostrando {users.length} de {total} usuários
+            </div>
+            <Button variant="outline" size="icon" onClick={() => refetch()} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-card-foreground">Lista de Usuários</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum usuário encontrado. {searchTerm && 'Tente ajustar a busca.'}
+              <Button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} className="ml-2" variant="link">
+                Limpar Busca
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-card-foreground">Lista de Usuários</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum usuário encontrado. {searchTerm && 'Tente ajustar a busca.'}
-                <Button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} className="ml-2" variant="link">
-                  Limpar Busca
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Data de Atualização</TableHead>
-                        <TableHead>Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((u) => (
-                        <TableRow key={u.id}>
-                          <TableCell className="font-medium text-card-foreground">
-                            {u.first_name} {u.last_name || ''}
-                          </TableCell>
-                          <TableCell className="text-card-foreground">{u.email}</TableCell>
-                          <TableCell>
-                            <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>
-                              {u.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-card-foreground">
-                            {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}
-                          </TableCell>
-                          <TableCell className="space-x-2">
-                            <EditUserDialog 
-                              user={u} 
-                              isEditDialogOpen={isEditDialogOpen && editingUserId === u.id}
-                              setIsEditDialogOpen={setIsEditDialogOpen}
-                              handleEdit={handleEdit}
-                              handleEditSubmit={handleEditSubmit}
-                              editingUser={editingUser}
-                              updateMutation={updateMutation}
-                            />
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleDelete(u.id, u.email || 'usuário')}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Mobile List View */}
-                <div className="md:hidden space-y-4">
-                  {users.map((u) => (
-                    <Card key={u.id} className="shadow-sm">
-                      <CardContent className="p-4 space-y-2">
-                        <div className="flex justify-between items-start">
-                          <p className="font-semibold text-base truncate text-card-foreground">{u.first_name} {u.last_name || ''}</p>
-                          <Badge variant={u.role === "colaborador" ? "secondary" : "default"} className="ml-2 flex-shrink-0">
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Data de Atualização</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell className="font-medium text-card-foreground">
+                          {u.first_name} {u.last_name || ''}
+                        </TableCell>
+                        <TableCell className="text-card-foreground">{u.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>
                             {u.role}
                           </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">{u.email}</p>
-                        <p className="text-xs text-muted-foreground">Atualizado em: {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}</p>
-                        <div className="flex justify-end space-x-2 pt-2">
+                        </TableCell>
+                        <TableCell className="text-card-foreground">
+                          {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="space-x-2">
                           <EditUserDialog 
                             user={u} 
                             isEditDialogOpen={isEditDialogOpen && editingUserId === u.id}
@@ -406,40 +366,77 @@ const Users = () => {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
-                {totalPages > 1 && (
-                  <div className="flex justify-between items-center mt-6">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Anterior
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Página {currentPage} de {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Próxima
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
+              {/* Mobile List View */}
+              <div className="md:hidden space-y-4">
+                {users.map((u) => (
+                  <Card key={u.id} className="shadow-sm">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <p className="font-semibold text-base truncate text-card-foreground">{u.first_name} {u.last_name || ''}</p>
+                        <Badge variant={u.role === "colaborador" ? "secondary" : "default"} className="ml-2 flex-shrink-0">
+                          {u.role}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                      <p className="text-xs text-muted-foreground">Atualizado em: {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}</p>
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <EditUserDialog 
+                          user={u} 
+                          isEditDialogOpen={isEditDialogOpen && editingUserId === u.id}
+                          setIsEditDialogOpen={setIsEditDialogOpen}
+                          handleEdit={handleEdit}
+                          handleEditSubmit={handleEditSubmit}
+                          editingUser={editingUser}
+                          updateMutation={updateMutation}
+                        />
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDelete(u.id, u.email || 'usuário')}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </Card>
-      </div>
+      </CardContent>
     </div>
   );
 };
