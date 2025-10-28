@@ -99,7 +99,9 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({
         setIsEditDialogOpen(open);
         if (!open) {
           // Limpa o estado de edição ao fechar
-          handleEdit(user); // Re-seta o usuário para garantir que o diálogo abra corretamente na próxima vez
+          // Nota: handleEdit(user) aqui não faz sentido se o diálogo está fechando.
+          // A lógica de reset deve ser feita no componente pai (Users) ou garantindo que o estado
+          // de edição seja limpo quando o diálogo for fechado.
         }
       }}
     >
