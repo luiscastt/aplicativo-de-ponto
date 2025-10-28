@@ -140,7 +140,7 @@ const Dashboard = () => {
                 ))}
                 {(!records || records.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-left text-muted-foreground py-8">
                       Nenhum registro recente encontrado.
                     </TableCell>
                   </TableRow>
@@ -152,7 +152,7 @@ const Dashboard = () => {
           {/* Mobile List View */}
           <div className="md:hidden space-y-4">
             {records?.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
+              <div className="text-left text-muted-foreground py-8">
                 Nenhum registro recente encontrado.
               </div>
             ) : (

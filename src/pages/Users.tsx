@@ -290,7 +290,7 @@ const Users = () => {
       <div className="w-full">
         <Card>
           <CardHeader>
-            <CardTitle className="text-card-foreground">Gestão de Usuários</CardTitle>
+            <CardTitle className="text-card-foreground text-left">Gestão de Usuários</CardTitle>
           </CardHeader>
           <CardContent className="text-left text-red-500">
             <p>Acesso negado. Apenas gestores e admins podem gerenciar usuários.</p>
