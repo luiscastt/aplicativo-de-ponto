@@ -58,14 +58,13 @@ const Sidebar = () => {
       <div className={`
         bg-sidebar shadow-xl transition-transform duration-300 ease-in-out
         fixed top-0 left-0 h-full z-40 flex-shrink-0
-        md:sticky md:translate-x-0 md:w-64 md:p-4
+        md:sticky md:translate-x-0 md:w-64 md:p-4 md:border-r md:border-sidebar-border
         ${isMobile ? (isOpen ? 'w-64 translate-x-0 p-4' : 'w-0 -translate-x-full p-0') : 'w-64 p-4'}
       `}>
         <div className={`flex flex-col h-full ${isMobile && !isOpen ? 'hidden' : 'block'}`}>
           
           {/* Logo e Título */}
           <div className="mb-6 flex items-center space-x-2">
-            {/* Ajustando o tamanho da logo para ser mais visível */}
             <img src="/logo.jpeg" alt="Logo da Empresa" className="h-10 w-auto object-contain" />
             <h2 className="text-xl font-bold text-sidebar-foreground">Painel de Ponto</h2>
           </div>
@@ -79,7 +78,7 @@ const Sidebar = () => {
                   className={`w-full justify-start 
                     ${isActive(item.path) 
                       ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' 
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                     }
                   `}
                 >
@@ -98,8 +97,8 @@ const Sidebar = () => {
                 {user?.role}
               </Badge>
             </div>
-            {/* Usando variant="default" para o botão Sair, que usa a cor Primary (Azul Escuro) */}
-            <Button variant="default" onClick={signOut} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+            {/* Usando variant="secondary" para o botão Sair (Azul Escuro) */}
+            <Button variant="secondary" onClick={signOut} className="w-full">
               <LogOut className="mr-2 h-4 w-4" />
               Sair
             </Button>
