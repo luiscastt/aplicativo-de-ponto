@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
         setProfileLoading(false);
         
-        if (retryCount < 3 && (error.code === 'PGRST116' || error.status === 403)) {
+        if (retryCount < 3 && error.code === 'PGRST116') {
           console.log('[DEBUG] Retrying profile fetch in 1s...');
           setTimeout(() => fetchProfile(userId, retryCount + 1), 1000);
         }
