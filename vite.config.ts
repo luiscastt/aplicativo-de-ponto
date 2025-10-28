@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig(() => ({
-  base: "./",
+  base: "./", // Garante que os caminhos dos assets sejam relativos para funcionar no GitHub Pages
   server: {
     host: "::",
     port: 8080,
