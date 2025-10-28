@@ -96,13 +96,17 @@ const Settings = () => {
   }
 
   return (
-    <div className="p-4 sm:p-0">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="w-full">
+      {/* Títulos Centralizados */}
+      <div className="flex flex-col items-center space-x-3 mb-6 text-center">
         <div className="flex items-center space-x-3">
           <SettingsIcon className="h-6 w-6 text-primary" />
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configurações da Empresa</h1>
         </div>
+      </div>
 
+      {/* Conteúdo Alinhado à Esquerda com Largura Limitada */}
+      <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-card-foreground">Geofence</CardTitle>

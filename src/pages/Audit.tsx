@@ -8,24 +8,31 @@ const Audit = () => {
   const isGestorOrAdmin = user?.role === 'gestor' || user?.role === 'admin';
 
   return (
-    <div className="p-4 sm:p-0">
-      <div className="flex items-center space-x-3 mb-6">
-        <ScrollText className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Auditoria de Registros</h1>
+    <div className="w-full">
+      {/* Títulos Centralizados */}
+      <div className="flex flex-col items-center space-x-3 mb-6 text-center">
+        <div className="flex items-center space-x-3">
+          <ScrollText className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Auditoria de Registros</h1>
+        </div>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-card-foreground">Logs de Atividade</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            {isGestorOrAdmin 
-              ? "Aqui serão exibidos todos os logs de auditoria do sistema."
-              : "Aqui serão exibidos seus logs de auditoria pessoal."
-            }
-          </p>
-        </CardContent>
-      </Card>
+      
+      {/* Conteúdo Alinhado à Esquerda com Largura Limitada */}
+      <div className="max-w-6xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-card-foreground">Logs de Atividade</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              {isGestorOrAdmin 
+                ? "Aqui serão exibidos todos os logs de auditoria do sistema."
+                : "Aqui serão exibidos seus logs de auditoria pessoal."
+              }
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
