@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { showSuccess, showError, showLoading } from "@/utils/toast";
+import { showSuccess, showError, showLoading, dismissToast } from "@/utils/toast";
 import { MapPin, Camera, Clock, AlertCircle } from "lucide-react";
 import { Point } from "@/types";
 import { calculateDistance, isWithinGeofence } from "@/utils/geofence";
@@ -112,13 +112,15 @@ const PointRegistration = () => {
         });
       if (error) throw error;
 
+      dismissToast(toastId);
       showSuccess(`Ponto de ${type} registrado! ${geofenceWarning ? '(Pendente aprovação)' : '(Aprovado)'}`, { id: toastId });
       setLocation(null);
       setPhotoFile(null);
       setType("entrada");
       setGeofenceWarning(false);
     } catch (error: any) {
-      showError(`Erro ao registrar: ${error.message}`, { id: toastId });
+      dismissToast(toastId);
+      showError(`Erro ao registrar: ${error.message}`);
     } finally {
       setLoading(false);
     }
