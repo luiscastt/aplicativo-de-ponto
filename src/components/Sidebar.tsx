@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Clock, BarChart3, Settings, Users, LogOut, Menu, ScrollText } from "lucide-react";
+import { Clock, BarChart3, Settings, Users, LogOut, Menu, ScrollText, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
@@ -13,12 +13,15 @@ const Sidebar = () => {
   const location = useLocation();
   const { user, signOut, profileLoading } = useAuth();
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(!isMobile);
+  const [isOpen, setIsOpen] = useState(false); // Começa fechada no mobile, ou aberta no desktop (controlado por CSS)
 
   useEffect(() => {
-    // Fecha a sidebar automaticamente ao mudar para desktop
+    // Se for desktop, garantimos que o estado interno reflita a abertura
     if (!isMobile) {
       setIsOpen(true);
+    } else {
+      // Se for mobile, garantimos que o estado interno comece fechado
+      setIsOpen(false);
     }
   }, [isMobile]);
   
@@ -39,7 +42,11 @@ const Sidebar = () => {
 
   if (profileLoading) {
     return (
-      <div className="bg-white shadow-md w-64 p-4 flex items-center justify-center">
+      <div className={`
+        bg-sidebar shadow-md transition-all duration-300 
+        ${isMobile ? 'fixed top-0 left-0 h-full z-40 w-64 p-4' : 'sticky top-0 h-screen w-64 p-4'}
+        hidden md:flex flex-col
+      `}>
         <div className="text-sm text-gray-500">Carregando menu...</div>
       </div>
     );
@@ -49,41 +56,40 @@ const Sidebar = () => {
     <>
       {/* Sidebar Desktop/Mobile */}
       <div className={`
-        bg-sidebar shadow-md transition-all duration-300 
-        ${isMobile ? 'fixed top-0 left-0 h-full z-40' : 'sticky top-0 h-screen'}
-        ${isOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}
+        bg-sidebar shadow-xl transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-full z-40 flex-shrink-0
+        md:sticky md:translate-x-0 md:w-64 md:p-4
+        ${isMobile ? (isOpen ? 'w-64 translate-x-0 p-4' : 'w-0 -translate-x-full p-0') : 'w-64 p-4'}
       `}>
-        {isOpen && (
-          <div className="flex flex-col h-full">
-            <h2 className="text-xl font-bold mb-6 text-sidebar-primary">Painel de Ponto</h2>
-            <ul className="space-y-2 flex-grow">
-              {menuItems.map((item) => (
-                <li key={item.path}>
-                  <Button
-                    variant={isActive(item.path) ? "default" : "ghost"}
-                    onClick={() => handleNav(item.path)}
-                    className={`w-full justify-start ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' : 'text-sidebar-foreground hover:bg-sidebar-accent'}`}
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-auto pt-4 border-t border-sidebar-border">
-              <div className="text-sm text-sidebar-foreground mb-2 truncate">
-                {user?.first_name || user?.email}
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {user?.role}
-                </Badge>
-              </div>
-              <Button variant="destructive" onClick={signOut} className="w-full">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </Button>
+        <div className={`flex flex-col h-full ${isMobile && !isOpen ? 'hidden' : 'block'}`}>
+          <h2 className="text-xl font-bold mb-6 text-sidebar-primary">Painel de Ponto</h2>
+          <ul className="space-y-2 flex-grow">
+            {menuItems.map((item) => (
+              <li key={item.path}>
+                <Button
+                  variant={isActive(item.path) ? "default" : "ghost"}
+                  onClick={() => handleNav(item.path)}
+                  className={`w-full justify-start ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' : 'text-sidebar-foreground hover:bg-sidebar-accent'}`}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-auto pt-4 border-t border-sidebar-border">
+            <div className="text-sm text-sidebar-foreground mb-2 truncate">
+              {user?.first_name || user?.email}
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {user?.role}
+              </Badge>
             </div>
+            <Button variant="destructive" onClick={signOut} className="w-full">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </Button>
           </div>
-        )}
+        </div>
       </div>
       
       {/* Mobile toggle button */}
@@ -94,7 +100,7 @@ const Sidebar = () => {
           className="fixed top-4 left-4 z-50 bg-white shadow-lg"
           onClick={() => setIsOpen(!isOpen)}
         >
-          <Menu className="h-4 w-4" />
+          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       )}
 

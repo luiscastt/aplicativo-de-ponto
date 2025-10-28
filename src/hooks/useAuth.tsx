@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const fetchProfile = async (userId: string, retryCount = 0) => {
+  const fetchProfile = async (userId: string) => {
     setProfileLoading(true);
     
     try {
@@ -32,14 +32,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
       
       if (error) {
-        console.error(`[Auth] Error fetching profile for user ${userId} (Attempt ${retryCount + 1}):`, error);
+        // PGRST116: row not found. This is expected if the profile hasn't been created yet (race condition)
+        // or if the user is not authorized to view their own profile (RLS issue).
+        console.error(`[Auth] Error fetching profile for user ${userId}:`, error);
         setUser(null);
         setProfileLoading(false);
-        
-        // Retry logic for common race condition error (PGRST116: row not found)
-        if (retryCount < 3 && error.code === 'PGRST116') {
-          setTimeout(() => fetchProfile(userId, retryCount + 1), 1000);
-        }
         return;
       }
       
