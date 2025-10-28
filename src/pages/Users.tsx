@@ -13,6 +13,7 @@ import { UserPlus, Edit, Trash2, Search, Loader2, RefreshCw } from "lucide-react
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateUserResponse, Profile } from "@/types";
+import React from "react"; // Importando React explicitamente para tipagem de FC
 
 interface UserFormData {
   first_name: string;
@@ -70,6 +71,93 @@ const updateUserProfile = async (userId: string, data: Partial<UserFormData>) =>
   
   return { success: true, message: 'Perfil atualizado!' };
 };
+
+// Componente auxiliar para o Diálogo de Edição (definido antes do Users para evitar problemas de escopo/sintaxe)
+interface EditUserDialogProps {
+  user: Profile;
+  isEditDialogOpen: boolean;
+  setIsEditDialogOpen: (open: boolean) => void;
+  handleEdit: (user: Profile) => void;
+  handleEditSubmit: (e: React.FormEvent) => void;
+  editingUser: Partial<Profile> | null;
+  updateMutation: ReturnType<typeof useMutation<any, any, { userId: string; data: Partial<UserFormData>; }>>;
+}
+
+const EditUserDialog: React.FC<EditUserDialogProps> = ({
+  user,
+  isEditDialogOpen,
+  setIsEditDialogOpen,
+  handleEdit,
+  handleEditSubmit,
+  editingUser,
+  updateMutation
+}) => {
+  return (
+    <Dialog 
+      open={isEditDialogOpen} 
+      onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (!open) {
+          // Limpa o estado de edição ao fechar
+          handleEdit(user); // Re-seta o usuário para garantir que o diálogo abra corretamente na próxima vez
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="text-card-foreground">Editar {user.first_name}</DialogTitle>
+          <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit_first_name">Nome Completo</Label>
+            <Input 
+              id="edit_first_name" 
+              name="first_name" 
+              defaultValue={editingUser?.first_name} 
+              required 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Email (não editável)</Label>
+            <Input value={user.email} disabled className="bg-gray-100" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit_role">Role</Label>
+            <Select name="role" defaultValue={editingUser?.role || user.role}>
+              <SelectTrigger id="edit_role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="colaborador">Colaborador</SelectItem>
+                <SelectItem value="gestor">Gestor</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Alterações"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 
 const Users = () => {
   const { user: currentUser } = useAuth();
@@ -438,92 +526,6 @@ const Users = () => {
         </Card>
       </CardContent>
     </div>
-  );
-};
-
-// Componente auxiliar para o Diálogo de Edição (para simplificar o Users.tsx)
-interface EditUserDialogProps {
-  user: Profile;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  handleEdit: (user: Profile) => void;
-  handleEditSubmit: (e: React.FormEvent) => void;
-  editingUser: Partial<Profile> | null;
-  updateMutation: ReturnType<typeof useMutation<any, any, { userId: string; data: Partial<UserFormData>; }>>;
-}
-
-const EditUserDialog: React.FC<EditUserDialogProps> = ({
-  user,
-  isEditDialogOpen,
-  setIsEditDialogOpen,
-  handleEdit,
-  handleEditSubmit,
-  editingUser,
-  updateMutation
-}) => {
-  return (
-    <Dialog 
-      open={isEditDialogOpen} 
-      onOpenChange={(open) => {
-        setIsEditDialogOpen(open);
-        if (!open) {
-          // Limpa o estado de edição ao fechar
-          handleEdit(user); // Re-seta o usuário para garantir que o diálogo abra corretamente na próxima vez
-        }
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
-          <Edit className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="text-card-foreground">Editar {user.first_name}</DialogTitle>
-          <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleEditSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit_first_name">Nome Completo</Label>
-            <Input 
-              id="edit_first_name" 
-              name="first_name" 
-              defaultValue={editingUser?.first_name} 
-              required 
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Email (não editável)</Label>
-            <Input value={user.email} disabled className="bg-gray-100" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit_role">Role</Label>
-            <Select name="role" defaultValue={editingUser?.role || user.role}>
-              <SelectTrigger id="edit_role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="colaborador">Colaborador</SelectItem>
-                <SelectItem value="gestor">Gestor</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter>
-            <Button type="submit" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                "Salvar Alterações"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 };
 
