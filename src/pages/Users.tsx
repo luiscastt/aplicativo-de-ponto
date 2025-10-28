@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,35 +10,43 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useAuth } from "@/hooks/useAuth";
 import { UserPlus, Edit, Trash2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
+import { createClient } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
 
-// Mock data para usuários (em produção, fetch de /users ou Supabase.from('users').select())
+const supabase = createClient();
+
 const fetchUsers = async () => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return [
-    { id: "1", name: "João Silva", email: "joao@empresa.com", role: "colaborador" as const, photoUrl: "/placeholder.svg" },
-    { id: "2", name: "Maria Oliveira", email: "maria@empresa.com", role: "colaborador" as const, photoUrl: "/placeholder.svg" }
-  ];
+  const { data, error } = await supabase.from('profiles').select('*');
+  if (error) throw error;
+  return data || [];
 };
 
-// Mock add user (em produção, POST /users ou Supabase.from('users').insert())
-const addUser = async (userData: { name: string; email: string; role: "colaborador" | "gestor" }) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return { id: Date.now().toString(), ...userData, photoUrl: "/placeholder.svg" };
+const addUser = async (userData: { first_name: string; email: string; role: "colaborador" | "gestor" | "admin" }) => {
+  // Para add, crie user via supabase.auth.admin.createUser, mas no MVP, assuma signup manual + update profile
+  const { data, error } = await supabase.from('profiles').upsert({ 
+    id: userData.email, // Temp ID; real: use auth.uid() após signup
+    first_name: userData.first_name,
+    email: userData.email,
+    role: userData.role,
+    updated_at: new Date().toISOString()
+  }).select().single();
+  if (error) throw error;
+  return data;
 };
 
-// Mock delete user
 const deleteUser = async (id: string) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
+  const { error } = await supabase.from('profiles').delete().eq('id', id);
+  if (error) throw error;
   return { success: true };
 };
 
 const Users = () => {
   const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", role: "colaborador" as const });
+  const [formData, setFormData] = useState({ first_name: "", email: "", role: "colaborador" as const });
+  const queryClient = useQueryClient();
 
-  const { data: users, refetch } = useQuery({
+  const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: fetchUsers,
   });
@@ -48,19 +56,19 @@ const Users = () => {
     onSuccess: () => {
       showSuccess("Usuário adicionado com sucesso!");
       setIsDialogOpen(false);
-      setFormData({ name: "", email: "", role: "colaborador" });
-      refetch();
+      setFormData({ first_name: "", email: "", role: "colaborador" });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: () => showError("Erro ao adicionar usuário.")
+    onError: (error) => showError(error.message)
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
       showSuccess("Usuário removido!");
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: () => showError("Erro ao remover usuário.")
+    onError: (error) => showError(error.message)
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,6 +82,8 @@ const Users = () => {
     }
   };
 
+  if (isLoading) return <div className="p-8">Carregando...</div>;
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -81,7 +91,7 @@ const Users = () => {
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
-            <p className="text-gray-600">Adicione e gerencie colaboradores.</p>
+            <p className="text-gray-600">Adicione e gerencie colaboradores (roles via Supabase).</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -92,12 +102,12 @@ const Users = () => {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Adicionar Colaborador</DialogTitle>
-                <DialogDescription>Preencha os dados para onboard.</DialogDescription>
+                <DialogDescription>Preencha para criar/atualizar profile (faça signup manual no Supabase para auth).</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                  <Label htmlFor="first_name">Nome</Label>
+                  <Input id="first_name" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -108,19 +118,14 @@ const Users = () => {
                   <select
                     id="role"
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as "colaborador" | "gestor" })}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as "colaborador" | "gestor" | "admin" })}
                     className="w-full p-2 border rounded-md"
                     required
                   >
                     <option value="colaborador">Colaborador</option>
                     <option value="gestor">Gestor</option>
+                    <option value="admin">Admin</option>
                   </select>
-                </div>
-                {/* Foto base para facial: em produção, upload file e store em Supabase storage */}
-                <div className="space-y-2">
-                  <Label>Foto Base (para facial, opcional no MVP)</Label>
-                  <Input type="file" accept="image/*" onChange={() => { /* Handle upload */ }} />
-                  <p className="text-sm text-muted-foreground">Captura selfie durante onboarding no app.</p>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={addMutation.isPending}>
@@ -148,7 +153,7 @@ const Users = () => {
               <TableBody>
                 {users?.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.name}</TableCell>
+                    <TableCell className="font-medium">{u.first_name}</TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>
                       <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>{u.role}</Badge>
