@@ -1,0 +1,227 @@
+"use client";
+
+import { useState, useEffect } from "react"; // Added useEffect import
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Settings as SettingsIcon, Save, MapPin, Clock, Image } from "lucide-react";
+
+interface CompanySettings {
+  geofence_center: { lat: number; lng: number };
+  geofence_radius: number;
+  tolerance_minutes: number;
+  photo_retention_days: number;
+  updated_at: string;
+}
+
+const Settings = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [settings, setSettings] = useState<CompanySettings | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => { // Now properly imported
+    if (settings) {
+      // Auto-save on slider change after debounce
+      const timer = setTimeout(async () => {
+        if (updating) return;
+        await updateSettings();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [settings]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    const { data, error } = await supabase
+      .from("company_settings")
+      .select("*")
+      .eq("id", "default")
+      .single();
+
+    if (error && error.code !== "PGRST116") { // Not found error
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar configurações",
+        description: error.message,
+      });
+    }
+
+    setSettings(data ?? {
+      geofence_center: { lat: -23.5505, lng: -46.6333 }, // Default São Paulo
+      geofence_radius: 100,
+      tolerance_minutes: 15,
+      photo_retention_days: 30,
+      updated_at: new Date().toISOString(),
+    });
+  };
+
+  const updateSettings = async () => {
+    if (!settings || !user) return;
+
+    setUpdating(true);
+    const { error } = await supabase
+      .from("company_settings")
+      .upsert({
+        id: "default",
+        ...settings,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar configurações",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Configurações salvas!",
+        description: "As alterações foram aplicadas.",
+      });
+    }
+    setUpdating(false);
+  };
+
+  const handleSliderChange = (key: keyof CompanySettings, value: number[]) => {
+    if (settings) {
+      setSettings({ ...settings, [key]: value[0] });
+    }
+  };
+
+  if (!user || user.role !== "gestor" && user.role !== "admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Acesso Negado</CardTitle>
+            <CardDescription className="text-center">
+              Apenas gestores e administradores podem acessar configurações.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button onClick={() => window.history.back()}>Voltar</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="flex items-center space-x-3">
+          <SettingsIcon className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Configurações da Empresa</h1>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Geofence</CardTitle>
+            <CardDescription>Definir área permitida para registro de pontos</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Centro da Área (Latitude, Longitude)</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Input
+                    type="number"
+                    step="any"
+                    value={settings?.geofence_center.lat ?? ""}
+                    onChange={(e) => setSettings((prev) => prev ? { ...prev, geofence_center: { ...prev.geofence_center, lat: parseFloat(e.target.value) } } : null)}
+                    placeholder="Latitude"
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="number"
+                    step="any"
+                    value={settings?.geofence_center.lng ?? ""}
+                    onChange={(e) => setSettings((prev) => prev ? { ...prev, geofence_center: { ...prev.geofence_center, lng: parseFloat(e.target.value) } } : null)}
+                    placeholder="Longitude"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Raio da Área (metros)</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{settings?.geofence_radius ?? 100} m</span>
+                <Slider
+                  value={[settings?.geofence_radius ?? 100]}
+                  onValueChange={(value) => handleSliderChange("geofence_radius", value)}
+                  min={50}
+                  max={500}
+                  step={10}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tolerâncias</CardTitle>
+            <CardDescription>Configurações de tempo e validação</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Tolerância para Horário (minutos)</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{settings?.tolerance_minutes ?? 15} min</span>
+                <Slider
+                  value={[settings?.tolerance_minutes ?? 15]}
+                  onValueChange={(value) => handleSliderChange("tolerance_minutes", value)}
+                  min={5}
+                  max={60}
+                  step={5}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Armazenamento de Fotos</CardTitle>
+            <CardDescription>Período de retenção das imagens</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Dias de Retenção</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{settings?.photo_retention_days ?? 30} dias</span>
+                <Slider
+                  value={[settings?.photo_retention_days ?? 30]}
+                  onValueChange={(value) => handleSliderChange("photo_retention_days", value)}
+                  min={7}
+                  max={90}
+                  step={7}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Button onClick={updateSettings} className="w-full" disabled={updating || !settings}>
+          <Save className="mr-2 h-4 w-4" />
+          {updating ? "Salvando..." : "Salvar Configurações"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default Settings;

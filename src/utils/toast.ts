@@ -1,11 +1,13 @@
+"use client";
+
 import { toast } from "sonner";
 
-export const showSuccess = (message: string) => {
-  toast.success(message);
+export const showSuccess = (message: string, options?: { id?: string }) => {
+  toast.success(message, options);
 };
 
-export const showError = (message: string) => {
-  toast.error(message);
+export const showError = (message: string, options?: { id?: string }) => {
+  toast.error(message, options);
 };
 
 export const showLoading = (message: string) => {
