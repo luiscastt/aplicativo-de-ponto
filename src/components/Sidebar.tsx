@@ -9,17 +9,25 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth(); // Fixed: use signOut instead of logout
+  const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
+
+  // Debug log for role and menu
+  console.log('[DEBUG Sidebar] User role:', user?.role); // Debug role
+
+  const isGestorOrAdmin = user?.role === "gestor" || user?.role === "admin";
+  console.log('[DEBUG Sidebar] isGestorOrAdmin:', isGestorOrAdmin); // Debug condition
 
   const menuItems = [
     { path: "/dashboard", icon: Clock, label: "Dashboard" },
     { path: "/reports", icon: MapPin, label: "Relatórios" },
-    ...(user?.role === "gestor" || user?.role === "admin" ? [{ path: "/users", icon: Users, label: "Usuários" }] : []),
+    ...(isGestorOrAdmin ? [{ path: "/users", icon: Users, label: "Usuários" }] : []),
     { path: "/audit", icon: Camera, label: "Auditoria" },
-    ...(user?.role === "gestor" || user?.role === "admin" ? [{ path: "/settings", icon: Settings, label: "Configurações" }] : []),
+    ...(isGestorOrAdmin ? [{ path: "/settings", icon: Settings, label: "Configurações" }] : []),
   ];
+
+  console.log('[DEBUG Sidebar] Menu items:', menuItems.map(item => item.label)); // Debug menu
 
   return (
     <div className={`bg-white shadow-md transition-all duration-300 ${isOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
@@ -40,7 +48,7 @@ const Sidebar = () => {
               </li>
             ))}
           </ul>
-          <Button variant="destructive" onClick={signOut} className="w-full"> {/* Fixed: use signOut */}
+          <Button variant="destructive" onClick={signOut} className="w-full">
             <LogOut className="mr-2 h-4 w-4" />
             Sair
           </Button>
