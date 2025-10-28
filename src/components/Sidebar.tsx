@@ -13,14 +13,12 @@ const Sidebar = () => {
   const location = useLocation();
   const { user, signOut, profileLoading } = useAuth();
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(false); // Começa fechada no mobile, ou aberta no desktop (controlado por CSS)
+  const [isOpen, setIsOpen] = useState(false); 
 
   useEffect(() => {
-    // Se for desktop, garantimos que o estado interno reflita a abertura
     if (!isMobile) {
       setIsOpen(true);
     } else {
-      // Se for mobile, garantimos que o estado interno comece fechado
       setIsOpen(false);
     }
   }, [isMobile]);
@@ -47,7 +45,7 @@ const Sidebar = () => {
         ${isMobile ? 'fixed top-0 left-0 h-full z-40 w-64 p-4' : 'sticky top-0 h-screen w-64 p-4'}
         hidden md:flex flex-col
       `}>
-        <div className="text-sm text-gray-500">Carregando menu...</div>
+        <div className="text-sm text-sidebar-foreground">Carregando menu...</div>
       </div>
     );
   }
@@ -62,14 +60,25 @@ const Sidebar = () => {
         ${isMobile ? (isOpen ? 'w-64 translate-x-0 p-4' : 'w-0 -translate-x-full p-0') : 'w-64 p-4'}
       `}>
         <div className={`flex flex-col h-full ${isMobile && !isOpen ? 'hidden' : 'block'}`}>
-          <h2 className="text-xl font-bold mb-6 text-sidebar-primary">Painel de Ponto</h2>
+          
+          {/* Logo e Título */}
+          <div className="mb-6 flex items-center space-x-2">
+            <img src="/logo.jpeg" alt="Logo" className="h-8 w-auto" />
+            <h2 className="text-xl font-bold text-sidebar-foreground">Painel de Ponto</h2>
+          </div>
+          
           <ul className="space-y-2 flex-grow">
             {menuItems.map((item) => (
               <li key={item.path}>
                 <Button
                   variant={isActive(item.path) ? "default" : "ghost"}
                   onClick={() => handleNav(item.path)}
-                  className={`w-full justify-start ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' : 'text-sidebar-foreground hover:bg-sidebar-accent'}`}
+                  className={`w-full justify-start 
+                    ${isActive(item.path) 
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90' 
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                    }
+                  `}
                 >
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
@@ -80,7 +89,9 @@ const Sidebar = () => {
           <div className="mt-auto pt-4 border-t border-sidebar-border">
             <div className="text-sm text-sidebar-foreground mb-2 truncate">
               {user?.first_name || user?.email}
-              <Badge variant="secondary" className="ml-2 text-xs">
+              <Badge 
+                className="ml-2 text-xs bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              >
                 {user?.role}
               </Badge>
             </div>
@@ -95,9 +106,9 @@ const Sidebar = () => {
       {/* Mobile toggle button */}
       {isMobile && (
         <Button
-          variant="outline"
+          variant="default"
           size="icon"
-          className="fixed top-4 left-4 z-50 bg-white shadow-lg"
+          className="fixed top-4 left-4 z-50 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}

@@ -6,10 +6,9 @@ import { Outlet } from 'react-router-dom';
 
 const MainLayout: React.FC = () => {
   
-  // A Sidebar agora gerencia sua própria visibilidade e o layout principal
-  // usa padding responsivo para acomodar o botão de menu mobile.
+  // O fundo principal agora é branco (bg-background)
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 transition-all duration-300 p-4 sm:p-8 md:ml-64 md:p-8">
         {/* Adicionando padding superior para evitar que o conteúdo fique atrás do botão de menu mobile */}
