@@ -16,9 +16,11 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false); 
 
   useEffect(() => {
+    // No desktop, a sidebar deve estar sempre aberta.
     if (!isMobile) {
       setIsOpen(true);
     } else {
+      // No mobile, fechar ao carregar
       setIsOpen(false);
     }
   }, [isMobile]);
@@ -63,7 +65,8 @@ const Sidebar = () => {
           
           {/* Logo e Título */}
           <div className="mb-6 flex items-center space-x-2">
-            <img src="/logo.jpeg" alt="Logo" className="h-8 w-auto" />
+            {/* Ajustando o tamanho da logo para ser mais visível */}
+            <img src="/logo.jpeg" alt="Logo da Empresa" className="h-10 w-auto object-contain" />
             <h2 className="text-xl font-bold text-sidebar-foreground">Painel de Ponto</h2>
           </div>
           
@@ -87,7 +90,7 @@ const Sidebar = () => {
             ))}
           </ul>
           <div className="mt-auto pt-4 border-t border-sidebar-border">
-            <div className="text-sm text-sidebar-foreground mb-2 truncate">
+            <div className="text-sm text-sidebar-foreground mb-2 truncate flex items-center">
               {user?.first_name || user?.email}
               <Badge 
                 className="ml-2 text-xs bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -95,7 +98,8 @@ const Sidebar = () => {
                 {user?.role}
               </Badge>
             </div>
-            <Button variant="destructive" onClick={signOut} className="w-full">
+            {/* Usando variant="default" para o botão Sair, que usa a cor Primary (Azul Escuro) */}
+            <Button variant="default" onClick={signOut} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
               <LogOut className="mr-2 h-4 w-4" />
               Sair
             </Button>
