@@ -15,7 +15,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,9 +33,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         // PGRST116: row not found. This is expected if the profile hasn't been created yet (race condition)
-        // or if the user is not authorized to view their own profile (RLS issue).
-        console.error(`[Auth] Error fetching profile for user ${userId}:`, error);
-        setUser(null);
+        if (error.code === "PGRST116") {
+          console.warn(`[Auth] Profile not found for user ${userId}. This might be a race condition after signup.`);
+          setUser(null);
+        } else {
+          // Logamos o erro 500 aqui para ver o que o Supabase está retornando
+          console.error(`[Auth] Critical error fetching profile for user ${userId}:`, error);
+          setUser(null);
+        }
         setProfileLoading(false);
         return;
       }
