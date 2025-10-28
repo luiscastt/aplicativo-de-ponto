@@ -70,18 +70,17 @@ const Dashboard = () => {
 
   return (
     <div className="w-full">
-      {/* Títulos Centralizados */}
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Bem-vindo, {userName}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Monitore registros recentes dos colaboradores.
-        </p>
-      </div>
-
-      {/* Conteúdo Alinhado à Esquerda com Largura Limitada */}
+      {/* Título e Conteúdo Alinhados à Esquerda com Largura Limitada */}
       <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            Bem-vindo, {userName}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Monitore registros recentes dos colaboradores.
+          </p>
+        </div>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

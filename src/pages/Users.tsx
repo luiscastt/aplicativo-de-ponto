@@ -214,14 +214,13 @@ const Users = () => {
 
   return (
     <div className="w-full">
-      {/* Títulos Centralizados */}
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
-        <p className="text-sm text-muted-foreground">Crie, edite e gerencie contas de colaboradores.</p>
-      </div>
-
-      {/* Conteúdo Alinhado à Esquerda com Largura Limitada */}
+      {/* Título e Conteúdo Alinhados à Esquerda com Largura Limitada */}
       <div className="max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
+          <p className="text-sm text-muted-foreground">Crie, edite e gerencie contas de colaboradores.</p>
+        </div>
+
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -278,8 +277,7 @@ const Users = () => {
               </form>
             </DialogContent>
           </Dialog>
-          {/* Espaçamento para alinhar o botão à direita em desktop, mas mantendo a centralização do título acima */}
-          <div className="hidden sm:block flex-grow" /> 
+          {/* Removendo o flex-grow desnecessário aqui */}
         </div>
 
         <Card className="mb-6">
