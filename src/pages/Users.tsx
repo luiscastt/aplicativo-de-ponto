@@ -13,7 +13,7 @@ import { UserPlus, Edit, Trash2, Search, Loader2, RefreshCw } from "lucide-react
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateUserResponse, Profile } from "@/types";
-import React from "react"; // Importando React explicitamente para tipagem de FC
+import React from "react";
 
 interface UserFormData {
   first_name: string;
@@ -72,7 +72,7 @@ const updateUserProfile = async (userId: string, data: Partial<UserFormData>) =>
   return { success: true, message: 'Perfil atualizado!' };
 };
 
-// Componente auxiliar para o Diálogo de Edição (definido antes do Users para evitar problemas de escopo/sintaxe)
+// Componente auxiliar para o Diálogo de Edição
 interface EditUserDialogProps {
   user: Profile;
   isEditDialogOpen: boolean;
