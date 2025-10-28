@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
       
       if (error) {
+        console.error(`[Auth] Error fetching profile for user ${userId} (Attempt ${retryCount + 1}):`, error);
         setUser(null);
         setProfileLoading(false);
         
@@ -47,8 +48,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: (profile.role || 'colaborador').trim().toLowerCase() as Profile['role']
       } : null;
       
+      console.log(`[Auth] Profile loaded for ${userId}. Role: ${normalizedProfile?.role}`);
       setUser(normalizedProfile);
     } catch (err) {
+      console.error("[Auth] General error during profile fetch:", err);
       setUser(null);
     } finally {
       setProfileLoading(false);

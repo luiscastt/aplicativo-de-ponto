@@ -28,6 +28,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   const isGestorOrAdmin = user?.role === 'gestor' || user?.role === 'admin';
+  
+  console.log(`[ProtectedRoute] User Role: ${user?.role}. Is Gestor/Admin: ${isGestorOrAdmin}`);
 
   if (!isGestorOrAdmin) {
     // Se o usuário for um colaborador, ele não deve acessar o Painel Web.
