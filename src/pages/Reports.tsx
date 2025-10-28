@@ -13,7 +13,7 @@ import { showSuccess } from "@/utils/toast";
 import Sidebar from "@/components/Sidebar";
 import { Point } from "@/types";
 
-// Fetch reports: points por período, join profiles, calcular horas
+// Fetch individual points for reports
 const fetchReports = async (filters: { userId?: string; dateFrom: string; dateTo: string }) => {
   let query = supabase
     .from('points')
@@ -36,8 +36,8 @@ const fetchReports = async (filters: { userId?: string; dateFrom: string; dateTo
   const { data, error } = await query;
   if (error) throw error;
 
-  // Calcular horas por dia (simples: pares entrada-saida)
-  const dailyData: { [date: string]: { entry?: string; exit?: string; hours: number; status: string } } = {};
+  // Calcular resumo (horas/extras por dia)
+  const dailyData: { [date: string]: { entry?: string; exit?: string; hours: number; status: string; points: any[] } } = {};
   let totalHours = 0;
   let extras = 0;
 
@@ -45,12 +45,13 @@ const fetchReports = async (filters: { userId?: string; dateFrom: string; dateTo
     const date = new Date(p.timestamp).toISOString().split('T')[0];
     const time = new Date(p.timestamp).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
     if (!dailyData[date]) {
-      dailyData[date] = { entry: null, exit: null, hours: 0, status: p.status };
+      dailyData[date] = { entry: null, exit: null, hours: 0, status: p.status, points: [] };
     }
     if (p.type === 'entrada') dailyData[date].entry = time;
     if (p.type === 'saida') dailyData[date].exit = time;
+    dailyData[date].points.push(p);
 
-    // Calcular horas (simplificado)
+    // Calcular horas se par completo
     if (dailyData[date].entry && dailyData[date].exit) {
       const entryTime = new Date(`2023-01-01 ${dailyData[date].entry}`);
       const exitTime = new Date(`2023-01-01 ${dailyData[date].exit}`);
@@ -58,22 +59,24 @@ const fetchReports = async (filters: { userId?: string; dateFrom: string; dateTo
       dailyData[date].hours = Math.round(hours * 10) / 10;
       totalHours += dailyData[date].hours;
       if (dailyData[date].hours > 8) extras += dailyData[date].hours - 8;
-      dailyData[date].status = p.status; // Último status
     }
   });
 
   return {
-    data: Object.entries(dailyData).map(([date, item]) => ({ date, ...item })),
-    totalHours: Math.round(totalHours * 10) / 10,
-    extras: Math.round(extras * 10) / 10,
+    points: data || [], // Individual points for table
+    summary: {
+      data: Object.entries(dailyData).map(([date, item]) => ({ date, ...item })),
+      totalHours: Math.round(totalHours * 10) / 10,
+      extras: Math.round(extras * 10) / 10,
+    }
   };
 };
 
-// Mutação para aprovar (update status)
-const approvePoint = async (pointId: string) => {
+// Mutação para aprovar/rejeitar ponto
+const updatePointStatus = async (pointId: string, status: 'aprovado' | 'rejeitado') => {
   const { error } = await supabase
     .from('points')
-    .update({ status: 'aprovado' })
+    .update({ status })
     .eq('id', pointId);
   if (error) throw error;
   return { success: true };
@@ -87,21 +90,28 @@ const Reports = () => {
   const { data: reportData, refetch } = useQuery({
     queryKey: ["reports", filters],
     queryFn: () => fetchReports(filters),
-    initialData: { data: [], totalHours: 0, extras: 0 },
+    initialData: { points: [], summary: { data: [], totalHours: 0, extras: 0 } },
   });
 
   const approveMutation = useMutation({
-    mutationFn: approvePoint,
+    mutationFn: (pointId: string) => updatePointStatus(pointId, 'aprovado'),
     onSuccess: () => {
       showSuccess("Ponto aprovado!");
       refetch();
     },
   });
 
+  const rejectMutation = useMutation({
+    mutationFn: (pointId: string) => updatePointStatus(pointId, 'rejeitado'),
+    onSuccess: () => {
+      showSuccess("Ponto rejeitado!");
+      refetch();
+    },
+  });
+
   const handleExport = () => {
-    // Simula CSV (em prod, use lib como papaparse)
-    const csv = reportData.data.map((item: any) => 
-      `${item.date},${item.entry || ''},${item.exit || ''},${item.hours},${item.status}`
+    const csv = reportData.points.map((p: any) => 
+      `${p.profiles.email},${p.type},${new Date(p.timestamp).toLocaleDateString('pt-BR')},${p.location.lat},${p.location.lon},${p.status}`
     ).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -112,7 +122,7 @@ const Reports = () => {
     showSuccess("Relatório exportado!");
   };
 
-  const chartData = reportData.data.map((item: any) => ({
+  const chartData = reportData.summary.data.map((item: any) => ({
     name: item.date,
     hours: item.hours,
     extras: item.hours > 8 ? item.hours - 8 : 0,
@@ -124,7 +134,7 @@ const Reports = () => {
       <div className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Relatórios de Jornadas</h1>
-          <p className="text-gray-600">Filtros e visualização de horas trabalhadas.</p>
+          <p className="text-gray-600">Filtros, visualização e aprovação de pontos.</p>
         </div>
         <Card className="mb-8">
           <CardHeader>
@@ -153,7 +163,7 @@ const Reports = () => {
         </Card>
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Gráfico de Horas</CardTitle>
+            <CardTitle>Gráfico de Horas (Resumo)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -171,57 +181,72 @@ const Reports = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Jornadas Detalhadas</CardTitle>
+            <CardTitle>Pontos Individuais</CardTitle>
             <Button onClick={handleExport} variant="outline">
               <Download className="mr-2 h-4 w-4" /> Exportar CSV
             </Button>
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground mb-4">
-              Total de Horas: {reportData.totalHours}h | Horas Extras: {reportData.extras}h
+              Total de Horas: {reportData.summary.totalHours}h | Horas Extras: {reportData.summary.extras}h
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Entrada</TableHead>
-                  <TableHead>Saída</TableHead>
-                  <TableHead>Horas</TableHead>
+                  <TableHead>Colaborador</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Data/Hora</TableHead>
+                  <TableHead>Localização</TableHead>
+                  <TableHead>Foto</TableHead>
                   <TableHead>Status</TableHead>
                   {isGestor && <TableHead>Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportData.data.map((item: any) => (
-                  <TableRow key={item.date}>
-                    <TableCell>{item.date}</TableCell>
-                    <TableCell>{item.entry || "N/A"}</TableCell>
-                    <TableCell>{item.exit || "N/A"}</TableCell>
-                    <TableCell>{item.hours > 0 ? `${item.hours}h` : "N/A"}</TableCell>
+                {reportData.points.map((p: any) => (
+                  <TableRow key={p.id}>
+                    <TableCell>{`${p.profiles.first_name} ${p.profiles.last_name || ''}`.trim() || p.profiles.email}</TableCell>
                     <TableCell>
-                      <Badge variant={item.status === "aprovado" ? "default" : item.status === "rejeitado" ? "destructive" : "secondary"}>
-                        {item.status}
+                      <Badge variant={p.type === "entrada" ? "default" : "secondary"}>{p.type}</Badge>
+                    </TableCell>
+                    <TableCell>{new Date(p.timestamp).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell>{`${p.location.lat.toFixed(4)}, ${p.location.lon.toFixed(4)}`}</TableCell>
+                    <TableCell>
+                      {p.photo_url ? (
+                        <img src={p.photo_url} alt="Foto" className="w-8 h-8 rounded" />
+                      ) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={p.status === "aprovado" ? "default" : p.status === "rejeitado" ? "destructive" : "secondary"}>
+                        {p.status}
                       </Badge>
                     </TableCell>
-                    {isGestor && (
-                      <TableCell>
-                        {item.status === "pendente" && (
-                          <Button
-                            size="sm"
-                            onClick={() => approveMutation.mutate(item.pointId || item.date)} // Assume pointId disponível ou ajuste
-                            disabled={approveMutation.isPending}
-                          >
-                            Aprovar
-                          </Button>
-                        )}
+                    {isGestor && p.status === "pendente" && (
+                      <TableCell className="space-x-2">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => approveMutation.mutate(p.id)}
+                          disabled={approveMutation.isPending}
+                        >
+                          Aprovar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => rejectMutation.mutate(p.id)}
+                          disabled={rejectMutation.isPending}
+                        >
+                          Rejeitar
+                        </Button>
                       </TableCell>
                     )}
                   </TableRow>
                 ))}
-                {reportData.data.length === 0 && (
+                {reportData.points.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={isGestor ? 6 : 5} className="text-center text-muted-foreground">
-                      Nenhum dado para o período.
+                    <TableCell colSpan={isGestor ? 7 : 6} className="text-center text-muted-foreground">
+                      Nenhum ponto para o período.
                     </TableCell>
                   </TableRow>
                 )}

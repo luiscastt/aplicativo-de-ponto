@@ -6,9 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { showSuccess, showError } from "@/utils/toast";
-import { MapPin, Camera, Clock } from "lucide-react";
+import { showSuccess, showError, showLoading } from "@/utils/toast";
+import { MapPin, Camera, Clock, AlertCircle } from "lucide-react";
 import { Point } from "@/types";
+import { calculateDistance, isWithinGeofence } from "@/utils/geofence";
+import { useQuery } from "@tanstack/react-query";
+
+const fetchSettings = async () => {
+  const { data, error } = await supabase
+    .from('company_settings')
+    .select('*')
+    .eq('id', 'default')
+    .single();
+  if (error) throw error;
+  return data;
+};
 
 const PointRegistration = () => {
   const { user } = useAuth();
@@ -16,24 +28,38 @@ const PointRegistration = () => {
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [type, setType] = useState<"entrada" | "saida">("entrada");
+  const [geofenceWarning, setGeofenceWarning] = useState(false);
 
-  const getLocation = () => {
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+    enabled: !!user,
+  });
+
+  const getLocation = async () => {
     if (!navigator.geolocation) {
       showError("Geolocalização não suportada pelo browser.");
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        });
-        showSuccess("Localização obtida!");
-      },
-      (error) => {
-        showError(`Erro na geolocalização: ${error.message}`);
+    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    });
+    const newLocation = {
+      lat: position.coords.latitude,
+      lon: position.coords.longitude,
+    };
+    setLocation(newLocation);
+    showSuccess("Localização obtida!");
+
+    // Check geofence
+    if (settings?.geofence_center && settings.geofence_radius) {
+      const center = settings.geofence_center as { lat: number; lon: number };
+      const within = isWithinGeofence(newLocation, center, settings.geofence_radius);
+      setGeofenceWarning(!within);
+      if (!within) {
+        showError(`Aviso: Fora do geofence (${(calculateDistance(newLocation.lat, newLocation.lon, center.lat, center.lon).toFixed(0)}m). Registro pendente para aprovação.`);
       }
-    );
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +81,7 @@ const PointRegistration = () => {
     }
 
     setLoading(true);
+    const toastId = showLoading("Registrando ponto...");
     try {
       let photoUrl = null;
       if (photoFile) {
@@ -78,18 +105,20 @@ const PointRegistration = () => {
         .insert({
           user_id: user.id,
           type,
+          timestamp: new Date().toISOString(), // Use current time
           location,
           photo_url: photoUrl,
-          status: 'pendente',
+          status: geofenceWarning ? 'pendente' : 'aprovado', // Auto-aprovar se dentro geofence
         });
       if (error) throw error;
 
-      showSuccess(`Ponto de ${type} registrado com sucesso!`);
+      showSuccess(`Ponto de ${type} registrado! ${geofenceWarning ? '(Pendente aprovação)' : '(Aprovado)'}`, { id: toastId });
       setLocation(null);
       setPhotoFile(null);
-      setType("entrada"); // Reset para próximo
+      setType("entrada");
+      setGeofenceWarning(false);
     } catch (error: any) {
-      showError(`Erro ao registrar: ${error.message}`);
+      showError(`Erro ao registrar: ${error.message}`, { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -115,6 +144,11 @@ const PointRegistration = () => {
           {location && (
             <p className="text-sm text-muted-foreground">
               {location.lat.toFixed(4)}, {location.lon.toFixed(4)}
+              {geofenceWarning && (
+                <span className="ml-2 text-orange-500 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" /> Fora do geofence
+                </span>
+              )}
             </p>
           )}
         </div>
