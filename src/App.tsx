@@ -11,7 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Audit from "./pages/Audit";
 import Settings from "./pages/Settings";
-import Users from "./pages/Users"; // Nova importação
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode;
   const { isAuthenticated, user } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (requiredRole && user?.role !== requiredRole && user?.role !== "admin") {
-    return <Navigate to="/dashboard" />; // Redireciona se role insuficiente
+    return <Navigate to="/dashboard" />;
   }
   return <>{children}</>;
 };
