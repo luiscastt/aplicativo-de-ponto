@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { createClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
-import { Profile } from "@/types"; // Assumindo types.ts com interface Profile { id: string; role: string; ... }
+import { Profile } from "@/types";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -13,8 +13,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const supabase = createClient();
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);

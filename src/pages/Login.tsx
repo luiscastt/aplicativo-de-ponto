@@ -4,12 +4,13 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { showError, showSuccess } from "@/utils/toast";
+import { supabase } from "@/integrations/supabase/client";
+import { showSuccess } from "@/utils/toast";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
     navigate("/dashboard");
@@ -31,7 +32,7 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           <Auth
-            supabaseClient={useAuth().session?.supabase} // Use o client do context
+            supabaseClient={supabase}
             providers={[]}
             appearance={{ 
               theme: ThemeSupa,
@@ -47,7 +48,7 @@ const Login = () => {
             theme="light"
             onAuthStateChange={handleAuthStateChange}
           />
-          <p className="text-sm text-gray-500 text-center mt-4">Crie usuários no Supabase dashboard para testar.</p>
+          <p className="text-sm text-gray-500 text-center mt-4">Crie usuários no Supabase dashboard para testar (ex: gestor@empresa.com / senha123).</p>
         </CardContent>
       </Card>
     </div>

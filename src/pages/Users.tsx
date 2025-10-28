@@ -10,10 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useAuth } from "@/hooks/useAuth";
 import { UserPlus, Edit, Trash2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { createClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
-
-const supabase = createClient();
 
 const fetchUsers = async () => {
   const { data, error } = await supabase.from('profiles').select('*');
@@ -22,9 +20,9 @@ const fetchUsers = async () => {
 };
 
 const addUser = async (userData: { first_name: string; email: string; role: "colaborador" | "gestor" | "admin" }) => {
-  // Para add, crie user via supabase.auth.admin.createUser, mas no MVP, assuma signup manual + update profile
+  // Nota: Para criar auth user real, use Supabase dashboard ou edge function. Aqui, upsert profile (assuma signup manual).
   const { data, error } = await supabase.from('profiles').upsert({ 
-    id: userData.email, // Temp ID; real: use auth.uid() após signup
+    id: userData.email, // Temp; real: use auth.uid() após signup
     first_name: userData.first_name,
     email: userData.email,
     role: userData.role,
@@ -59,7 +57,7 @@ const Users = () => {
       setFormData({ first_name: "", email: "", role: "colaborador" });
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (error) => showError(error.message)
+    onError: (error: any) => showError(error.message)
   });
 
   const deleteMutation = useMutation({
@@ -68,7 +66,7 @@ const Users = () => {
       showSuccess("Usuário removido!");
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (error) => showError(error.message)
+    onError: (error: any) => showError(error.message)
   });
 
   const handleSubmit = (e: React.FormEvent) => {
