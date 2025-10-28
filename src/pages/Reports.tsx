@@ -6,10 +6,10 @@ const Reports = () => {
   // O acesso já é garantido pelo ProtectedRoute para gestores/admins.
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-0">
       <div className="flex items-center space-x-3 mb-6">
         <BarChart3 className="h-6 w-6 text-blue-600" />
-        <h1 className="text-3xl font-bold">Relatórios de Ponto</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Relatórios de Ponto</h1>
       </div>
       <Card>
         <CardHeader>

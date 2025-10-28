@@ -6,10 +6,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types";
+import { Loader2, RefreshCw } from "lucide-react";
+
+// Tipagem para o registro de ponto
+interface PointRecord {
+  id: string;
+  user: string;
+  type: 'entrada' | 'saida' | 'almoco' | 'pausa';
+  timestamp: string;
+  location: { latitude: number; longitude: number };
+  photoUrl?: string;
+  status: 'pendente' | 'aprovado' | 'rejeitado';
+}
 
 // Fetch recent points
-const fetchRecentRecords = async () => {
-  // Alterado de profiles!inner(...) para profiles(...) para usar LEFT JOIN por padrão.
+const fetchRecentRecords = async (): Promise<PointRecord[]> => {
   const { data, error } = await supabase
     .from('points')
     .select(`
@@ -30,6 +41,14 @@ const fetchRecentRecords = async () => {
   })) || [];
 };
 
+const getStatusVariant = (status: PointRecord['status']) => {
+  switch (status) {
+    case "aprovado": return "default";
+    case "rejeitado": return "destructive";
+    default: return "secondary";
+  }
+};
+
 const Dashboard = () => {
   const { user, isAuthenticated, profileLoading } = useAuth() as { user: Profile | null; isAuthenticated: boolean; profileLoading: boolean };
 
@@ -42,18 +61,20 @@ const Dashboard = () => {
   if (profileLoading || isLoading) {
     return (
       <div className="flex justify-center items-center h-full min-h-[50vh]">
-        <div>Carregando dashboard...</div>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
+  const userName = user?.first_name || user?.email?.split('@')[0] || 'Gestor';
+
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-0">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">
-          Bem-vindo, {user?.first_name || user?.email?.split('@')[0] || 'Gestor'}
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          Bem-vindo, {userName}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm text-gray-600">
           Monitore registros recentes dos colaboradores.
         </p>
       </div>
@@ -61,14 +82,17 @@ const Dashboard = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Registros Recentes</CardTitle>
+            <CardTitle className="text-xl">Registros Recentes</CardTitle>
             <p className="text-sm text-muted-foreground">Últimos 10 pontos registrados</p>
           </div>
-          <Button onClick={() => refetch()} variant="outline" size="sm">
+          <Button onClick={() => refetch()} variant="outline" size="sm" disabled={isLoading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
         </CardHeader>
         <CardContent>
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -81,9 +105,9 @@ const Dashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {records?.map((record: any) => (
+                {records?.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell>{record.user}</TableCell>
+                    <TableCell className="font-medium">{record.user}</TableCell>
                     <TableCell>
                       <Badge variant={record.type === "entrada" ? "default" : "secondary"}>
                         {record.type}
@@ -107,12 +131,7 @@ const Dashboard = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={
-                          record.status === "aprovado" ? "default" : 
-                          record.status === "rejeitado" ? "destructive" : "secondary"
-                        }
-                      >
+                      <Badge variant={getStatusVariant(record.status)}>
                         {record.status}
                       </Badge>
                     </TableCell>
@@ -127,6 +146,46 @@ const Dashboard = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile List View */}
+          <div className="md:hidden space-y-4">
+            {records?.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                Nenhum registro recente encontrado.
+              </div>
+            ) : (
+              records?.map((record) => (
+                <Card key={record.id} className="shadow-sm">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <p className="font-semibold text-base truncate">{record.user}</p>
+                      <Badge variant={getStatusVariant(record.status)} className="ml-2 flex-shrink-0">
+                        {record.status}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p>Tipo: <Badge variant={record.type === "entrada" ? "default" : "secondary"}>{record.type}</Badge></p>
+                      <p>Horário: {new Date(record.timestamp).toLocaleString("pt-BR")}</p>
+                      <p className="truncate">Local: {`${record.location?.latitude?.toFixed(4) || 'N/A'}, ${record.location?.longitude?.toFixed(4) || 'N/A'}`}</p>
+                    </div>
+                    {record.photoUrl && (
+                      <div className="pt-2">
+                        <a 
+                          href={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline text-sm"
+                        >
+                          Ver Foto
+                        </a>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

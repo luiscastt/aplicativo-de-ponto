@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, Save } from "lucide-react";
+import { Settings as SettingsIcon, Save, Loader2 } from "lucide-react";
 import type { Profile } from "@/types";
 
 interface CompanySettings {
@@ -25,9 +25,6 @@ const Settings = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [updating, setUpdating] = useState(false);
-
-  // Removendo o useEffect que fazia update automático a cada 1s, pois isso pode ser caro e desnecessário.
-  // Vamos usar apenas o botão "Salvar Configurações".
 
   useEffect(() => {
     fetchSettings();
@@ -93,17 +90,17 @@ const Settings = () => {
   if (!settings) {
     return (
       <div className="flex items-center justify-center p-4 h-full min-h-[50vh]">
-        <div className="text-gray-500">Carregando configurações...</div>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 sm:p-0">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center space-x-3">
           <SettingsIcon className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Configurações da Empresa</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Configurações da Empresa</h1>
         </div>
 
         <Card>
@@ -114,7 +111,7 @@ const Settings = () => {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label>Centro da Área (Latitude, Longitude)</Label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Input
                     type="number"
@@ -138,14 +135,15 @@ const Settings = () => {
 
             <div className="space-y-2">
               <Label>Raio da Área (metros)</Label>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{settings?.geofence_radius ?? 100} m</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <span className="text-sm font-medium w-20 flex-shrink-0">{settings?.geofence_radius ?? 100} m</span>
                 <Slider
                   value={[settings?.geofence_radius ?? 100]}
                   onValueChange={(value) => handleSliderChange("geofence_radius", value)}
                   min={50}
                   max={500}
                   step={10}
+                  className="flex-1"
                 />
               </div>
             </div>
@@ -160,14 +158,15 @@ const Settings = () => {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label>Tolerância para Horário (minutos)</Label>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{settings?.tolerance_minutes ?? 15} min</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <span className="text-sm font-medium w-20 flex-shrink-0">{settings?.tolerance_minutes ?? 15} min</span>
                 <Slider
                   value={[settings?.tolerance_minutes ?? 15]}
                   onValueChange={(value) => handleSliderChange("tolerance_minutes", value)}
                   min={5}
                   max={60}
                   step={5}
+                  className="flex-1"
                 />
               </div>
             </div>
@@ -182,14 +181,15 @@ const Settings = () => {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label>Dias de Retenção</Label>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{settings?.photo_retention_days ?? 30} dias</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <span className="text-sm font-medium w-20 flex-shrink-0">{settings?.photo_retention_days ?? 30} dias</span>
                 <Slider
                   value={[settings?.photo_retention_days ?? 30]}
                   onValueChange={(value) => handleSliderChange("photo_retention_days", value)}
                   min={7}
                   max={90}
                   step={7}
+                  className="flex-1"
                 />
               </div>
             </div>
@@ -197,8 +197,17 @@ const Settings = () => {
         </Card>
 
         <Button onClick={updateSettings} className="w-full" disabled={updating || !settings}>
-          <Save className="mr-2 h-4 w-4" />
-          {updating ? "Salvando..." : "Salvar Configurações"}
+          {updating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Salvar Configurações
+            </>
+          )}
         </Button>
       </div>
     </div>

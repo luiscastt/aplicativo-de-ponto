@@ -9,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { UserPlus, Edit, Trash2, Search, Loader2 } from "lucide-react";
+import { UserPlus, Edit, Trash2, Search, Loader2, RefreshCw } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { CreateUserResponse } from "@/types";
+import type { CreateUserResponse, Profile } from "@/types";
 
 interface UserFormData {
   first_name: string;
@@ -22,7 +22,7 @@ interface UserFormData {
 }
 
 interface UsersData {
-  users: any[];
+  users: Profile[];
   total: number;
 }
 
@@ -40,7 +40,7 @@ const fetchUsers = async (searchTerm?: string, page = 1, pageSize = 10): Promise
   const rangeQuery = query.range((page - 1) * pageSize, page * pageSize - 1);
   const { data, error, count } = await rangeQuery;
   if (error) throw error;
-  return { users: data || [], total: count || 0 };
+  return { users: data as Profile[] || [], total: count || 0 };
 };
 
 const createUserViaFunction = async (userData: UserFormData): Promise<CreateUserResponse> => {
@@ -75,7 +75,7 @@ const Users = () => {
   const { user: currentUser } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserFormData | null>(null);
+  const [editingUser, setEditingUser] = useState<Partial<Profile> | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,11 +120,12 @@ const Users = () => {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
     const formData: UserFormData = {
-      first_name: (e.target as any).first_name.value.trim(),
-      email: (e.target as any).email.value.trim().toLowerCase(),
-      password: (e.target as any).password.value,
-      role: (e.target as any).role.value as UserFormData['role'],
+      first_name: (form.elements.namedItem("first_name") as HTMLInputElement).value.trim(),
+      email: (form.elements.namedItem("email") as HTMLInputElement).value.trim().toLowerCase(),
+      password: (form.elements.namedItem("password") as HTMLInputElement).value,
+      role: (form.elements.namedItem("role") as HTMLSelectElement).value as UserFormData['role'],
     };
 
     if (!formData.first_name || !formData.email || !formData.password) {
@@ -146,10 +147,11 @@ const Users = () => {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser || !editingUserId) return;
-
+    
+    const form = e.currentTarget as HTMLFormElement;
     const updateData: Partial<UserFormData> = {
-      first_name: (e.target as any).first_name.value.trim(),
-      role: (e.target as any).role.value as UserFormData['role'],
+      first_name: (form.elements.namedItem("edit_first_name") as HTMLInputElement).value.trim(),
+      role: (form.elements.namedItem("edit_role") as HTMLSelectElement).value as UserFormData['role'],
     };
 
     if (!updateData.first_name) {
@@ -160,11 +162,11 @@ const Users = () => {
     updateMutation.mutate({ userId: editingUserId, data: updateData });
   };
 
-  const handleEdit = (user: any) => {
+  const handleEdit = (user: Profile) => {
     setEditingUser({
       first_name: user.first_name || '',
       email: user.email,
-      role: user.role as UserFormData['role'],
+      role: user.role,
     });
     setEditingUserId(user.id);
     setIsEditDialogOpen(true);
@@ -197,7 +199,7 @@ const Users = () => {
 
   if (!canCreate) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Card>
           <CardHeader>
             <CardTitle>Gestão de Usuários</CardTitle>
@@ -211,15 +213,15 @@ const Users = () => {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8 flex justify-between items-center">
+    <div className="p-4 sm:p-0">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
-          <p className="text-gray-600">Crie, edite e gerencie contas de colaboradores.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Gestão de Usuários</h1>
+          <p className="text-sm text-gray-600">Crie, edite e gerencie contas de colaboradores.</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="mt-4 sm:mt-0 w-full sm:w-auto">
               <UserPlus className="mr-2 h-4 w-4" />
               Adicionar Usuário
             </Button>
@@ -276,8 +278,8 @@ const Users = () => {
 
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex gap-4 items-center">
-            <div className="flex-1 relative">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex-1 relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por nome ou email..."
@@ -289,9 +291,12 @@ const Users = () => {
                 className="pl-10"
               />
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground flex-shrink-0">
               Mostrando {users.length} de {total} usuários
             </div>
+            <Button variant="outline" size="icon" onClick={() => refetch()} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -308,109 +313,100 @@ const Users = () => {
           ) : users.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Nenhum usuário encontrado. {searchTerm && 'Tente ajustar a busca.'}
-              <Button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} className="ml-2">
+              <Button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} className="ml-2" variant="link">
                 Limpar Busca
               </Button>
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Data de Criação</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((u: any) => (
-                    <TableRow key={u.id}>
-                      <TableCell className="font-medium">
-                        {u.first_name} {u.last_name || ''}
-                      </TableCell>
-                      <TableCell>{u.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Data de Atualização</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell className="font-medium">
+                          {u.first_name} {u.last_name || ''}
+                        </TableCell>
+                        <TableCell>{u.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>
+                            {u.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="space-x-2">
+                          <EditUserDialog 
+                            user={u} 
+                            isEditDialogOpen={isEditDialogOpen && editingUserId === u.id}
+                            setIsEditDialogOpen={setIsEditDialogOpen}
+                            handleEdit={handleEdit}
+                            handleEditSubmit={handleEditSubmit}
+                            editingUser={editingUser}
+                            updateMutation={updateMutation}
+                          />
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDelete(u.id, u.email || 'usuário')}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile List View */}
+              <div className="md:hidden space-y-4">
+                {users.map((u) => (
+                  <Card key={u.id} className="shadow-sm">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <p className="font-semibold text-base truncate">{u.first_name} {u.last_name || ''}</p>
+                        <Badge variant={u.role === "colaborador" ? "secondary" : "default"} className="ml-2 flex-shrink-0">
                           {u.role}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(u.updated_at || u.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell className="space-x-2">
-                        <Dialog open={isEditDialogOpen && editingUserId === u.id} onOpenChange={() => {
-                          if (!isEditDialogOpen) {
-                            setIsEditDialogOpen(false);
-                            setEditingUserId(null);
-                          }
-                        }}>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(u)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                              <DialogTitle>Editar {u.first_name}</DialogTitle>
-                              <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleEditSubmit} className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="edit_first_name">Nome Completo</Label>
-                                <Input 
-                                  id="edit_first_name" 
-                                  name="first_name" 
-                                  defaultValue={editingUser?.first_name} 
-                                  required 
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Email (não editável)</Label>
-                                <Input value={u.email} disabled className="bg-gray-100" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="edit_role">Role</Label>
-                                <Select name="role" defaultValue={editingUser?.role || u.role}>
-                                  <SelectTrigger id="edit_role">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="colaborador">Colaborador</SelectItem>
-                                    <SelectItem value="gestor">Gestor</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <DialogFooter>
-                                <Button type="submit" disabled={updateMutation.isPending}>
-                                  {updateMutation.isPending ? (
-                                    <>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Salvando...
-                                    </>
-                                  ) : (
-                                    "Salvar Alterações"
-                                  )}
-                                </Button>
-                              </DialogFooter>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                      <p className="text-xs text-muted-foreground">Atualizado em: {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}</p>
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <EditUserDialog 
+                          user={u} 
+                          isEditDialogOpen={isEditDialogOpen && editingUserId === u.id}
+                          setIsEditDialogOpen={setIsEditDialogOpen}
+                          handleEdit={handleEdit}
+                          handleEditSubmit={handleEditSubmit}
+                          editingUser={editingUser}
+                          updateMutation={updateMutation}
+                        />
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => handleDelete(u.id, u.email)}
+                          onClick={() => handleDelete(u.id, u.email || 'usuário')}
                           className="text-red-600 hover:text-red-800"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
               {totalPages > 1 && (
                 <div className="flex justify-between items-center mt-6">
@@ -440,6 +436,92 @@ const Users = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+// Componente auxiliar para o Diálogo de Edição (para simplificar o Users.tsx)
+interface EditUserDialogProps {
+  user: Profile;
+  isEditDialogOpen: boolean;
+  setIsEditDialogOpen: (open: boolean) => void;
+  handleEdit: (user: Profile) => void;
+  handleEditSubmit: (e: React.FormEvent) => void;
+  editingUser: Partial<Profile> | null;
+  updateMutation: ReturnType<typeof useMutation<any, any, { userId: string; data: Partial<UserFormData>; }>>;
+}
+
+const EditUserDialog: React.FC<EditUserDialogProps> = ({
+  user,
+  isEditDialogOpen,
+  setIsEditDialogOpen,
+  handleEdit,
+  handleEditSubmit,
+  editingUser,
+  updateMutation
+}) => {
+  return (
+    <Dialog 
+      open={isEditDialogOpen} 
+      onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (!open) {
+          // Limpa o estado de edição ao fechar
+          handleEdit(user); // Re-seta o usuário para garantir que o diálogo abra corretamente na próxima vez
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Editar {user.first_name}</DialogTitle>
+          <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit_first_name">Nome Completo</Label>
+            <Input 
+              id="edit_first_name" 
+              name="first_name" 
+              defaultValue={editingUser?.first_name} 
+              required 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Email (não editável)</Label>
+            <Input value={user.email} disabled className="bg-gray-100" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit_role">Role</Label>
+            <Select name="role" defaultValue={editingUser?.role || user.role}>
+              <SelectTrigger id="edit_role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="colaborador">Colaborador</SelectItem>
+                <SelectItem value="gestor">Gestor</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Alterações"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
