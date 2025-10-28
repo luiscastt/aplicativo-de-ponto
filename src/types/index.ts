@@ -19,3 +19,10 @@ export interface Point {
   created_at: string;
   user_name?: string; // Denormalizado para display
 }
+
+export interface CreateUserResponse {
+  success: boolean;
+  message?: string;
+  user_id?: string;
+  error?: string;
+}
