@@ -10,12 +10,12 @@ const Audit = () => {
   return (
     <div className="p-4 sm:p-0">
       <div className="flex items-center space-x-3 mb-6">
-        <ScrollText className="h-6 w-6 text-blue-600" />
-        <h1 className="text-2xl sm:text-3xl font-bold">Auditoria de Registros</h1>
+        <ScrollText className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Auditoria de Registros</h1>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Logs de Atividade</CardTitle>
+          <CardTitle className="text-card-foreground">Logs de Atividade</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">

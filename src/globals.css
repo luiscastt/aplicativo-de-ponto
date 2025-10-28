@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Branco */
-    --foreground: 222.2 84% 4.9%; /* Quase preto */
+    --background: 198 94% 18%; /* Azul Escuro (Fundo Principal) */
+    --foreground: 0 0% 100%; /* Branco (Texto Principal) */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* Cards Brancos */
+    --card-foreground: 222.2 84% 4.9%; /* Texto dos Cards Quase Preto */
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
     /* Cores Principais */
-    --primary: 198 94% 18%; /* Azul Escuro */
-    --primary-foreground: 0 0% 100%; /* Branco */
+    --primary: 45 100% 50%; /* Amarelo (Botões de Ação) */
+    --primary-foreground: 198 94% 18%; /* Texto Azul Escuro no Amarelo */
 
-    /* Cores de Destaque/Secundárias (Amarelo) */
-    --secondary: 45 100% 50%; /* Amarelo */
-    --secondary-foreground: 198 94% 18%; /* Texto Azul Escuro no Amarelo */
+    /* Cores de Destaque/Secundárias (Azul Claro) */
+    --secondary: 198 94% 25%; /* Azul um pouco mais claro que o fundo */
+    --secondary-foreground: 0 0% 100%; /* Texto Branco */
 
-    --muted: 210 40% 96.1%; /* Azul Claro/Cinza Claro */
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 198 94% 25%; /* Azul um pouco mais claro */
+    --muted-foreground: 215.4 16.3% 70%; /* Cinza Claro para texto secundário */
 
     --accent: 45 100% 50%; /* Amarelo */
     --accent-foreground: 198 94% 18%; /* Texto Azul Escuro no Amarelo */
@@ -30,45 +30,45 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 198 94% 18%; /* Ring Azul Escuro */
+    --border: 198 94% 30%; /* Borda Azul Escura */
+    --input: 198 94% 25%; /* Input Azul Claro */
+    --ring: 45 100% 50%; /* Ring Amarelo */
 
     --radius: 0.5rem;
 
-    /* Sidebar (Fundo Azul Escuro) */
-    --sidebar-background: 198 94% 18%; /* Azul Escuro */
-    --sidebar-foreground: 0 0% 100%; /* Branco */
-    --sidebar-primary: 45 100% 50%; /* Amarelo (para item ativo) */
-    --sidebar-primary-foreground: 198 94% 18%; /* Texto Azul Escuro no Amarelo */
-    --sidebar-accent: 198 94% 25%; /* Azul um pouco mais claro para hover */
+    /* Sidebar (Agora igual ao fundo principal) */
+    --sidebar-background: 198 94% 18%; 
+    --sidebar-foreground: 0 0% 100%; 
+    --sidebar-primary: 45 100% 50%; 
+    --sidebar-primary-foreground: 198 94% 18%; 
+    --sidebar-accent: 198 94% 25%; 
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 198 94% 30%;
     --sidebar-ring: 45 100% 50%;
   }
 
   .dark {
-    /* Mantendo o tema escuro, mas ajustando para as novas cores */
+    /* Invertendo para manter o contraste no dark mode */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 47.4% 11.2%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 45 100% 50%; /* Amarelo como Primary no Dark Mode */
+    --primary: 45 100% 50%; 
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 198 94% 18%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 198 94% 18%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 45 100% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -77,7 +77,6 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 45 100% 50%;
     
-    /* Sidebar Dark Mode */
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 45 100% 50%;

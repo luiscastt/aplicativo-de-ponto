@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react"; // Importação adicionada
+import { Loader2 } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -43,13 +43,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl border-t-4 border-primary">
         <CardHeader className="space-y-4 pt-8">
           <div className="flex justify-center">
             <img src="/logo.jpeg" alt="Logo da Empresa" className="h-16 w-auto" />
           </div>
-          <CardTitle className="text-3xl text-center text-primary">Acesso ao Painel</CardTitle>
+          <CardTitle className="text-3xl text-center text-card-foreground">Acesso ao Painel</CardTitle>
           <CardDescription className="text-center text-muted-foreground">
             Insira suas credenciais para continuar
           </CardDescription>

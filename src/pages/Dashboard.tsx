@@ -61,7 +61,7 @@ const Dashboard = () => {
   if (profileLoading || isLoading) {
     return (
       <div className="flex justify-center items-center h-full min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -71,10 +71,11 @@ const Dashboard = () => {
   return (
     <div className="p-4 sm:p-0">
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        {/* Títulos principais agora usam text-foreground (Branco) */}
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
           Bem-vindo, {userName}
         </h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Monitore registros recentes dos colaboradores.
         </p>
       </div>
@@ -82,7 +83,8 @@ const Dashboard = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-xl">Registros Recentes</CardTitle>
+            {/* Títulos dentro do Card usam text-card-foreground (Quase Preto) */}
+            <CardTitle className="text-xl text-card-foreground">Registros Recentes</CardTitle>
             <p className="text-sm text-muted-foreground">Últimos 10 pontos registrados</p>
           </div>
           <Button onClick={() => refetch()} variant="outline" size="sm" disabled={isLoading}>
@@ -107,14 +109,14 @@ const Dashboard = () => {
               <TableBody>
                 {records?.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.user}</TableCell>
+                    <TableCell className="font-medium text-card-foreground">{record.user}</TableCell>
                     <TableCell>
                       <Badge variant={record.type === "entrada" ? "default" : "secondary"}>
                         {record.type}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(record.timestamp).toLocaleString("pt-BR")}</TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="text-card-foreground">{new Date(record.timestamp).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="font-mono text-xs text-card-foreground">
                       {`${record.location?.latitude?.toFixed(4) || 'N/A'}, ${record.location?.longitude?.toFixed(4) || 'N/A'}`}
                     </TableCell>
                     <TableCell>
@@ -159,7 +161,7 @@ const Dashboard = () => {
                 <Card key={record.id} className="shadow-sm">
                   <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between items-start">
-                      <p className="font-semibold text-base truncate">{record.user}</p>
+                      <p className="font-semibold text-base truncate text-card-foreground">{record.user}</p>
                       <Badge variant={getStatusVariant(record.status)} className="ml-2 flex-shrink-0">
                         {record.status}
                       </Badge>

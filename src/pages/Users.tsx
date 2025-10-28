@@ -202,7 +202,7 @@ const Users = () => {
       <div className="p-4 sm:p-8">
         <Card>
           <CardHeader>
-            <CardTitle>Gestão de Usuários</CardTitle>
+            <CardTitle className="text-card-foreground">Gestão de Usuários</CardTitle>
           </CardHeader>
           <CardContent className="text-center text-red-500">
             <p>Acesso negado. Apenas gestores e admins podem gerenciar usuários.</p>
@@ -216,8 +216,8 @@ const Users = () => {
     <div className="p-4 sm:p-0">
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestão de Usuários</h1>
-          <p className="text-sm text-gray-600">Crie, edite e gerencie contas de colaboradores.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
+          <p className="text-sm text-muted-foreground">Crie, edite e gerencie contas de colaboradores.</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -228,7 +228,7 @@ const Users = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Criar Novo Usuário</DialogTitle>
+              <DialogTitle className="text-card-foreground">Criar Novo Usuário</DialogTitle>
               <DialogDescription>
                 Preencha para criar conta completa (auth + profile). Senha mínima: 6 caracteres.
               </DialogDescription>
@@ -303,7 +303,7 @@ const Users = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Usuários</CardTitle>
+          <CardTitle className="text-card-foreground">Lista de Usuários</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -334,16 +334,16 @@ const Users = () => {
                   <TableBody>
                     {users.map((u) => (
                       <TableRow key={u.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium text-card-foreground">
                           {u.first_name} {u.last_name || ''}
                         </TableCell>
-                        <TableCell>{u.email}</TableCell>
+                        <TableCell className="text-card-foreground">{u.email}</TableCell>
                         <TableCell>
                           <Badge variant={u.role === "colaborador" ? "secondary" : "default"}>
                             {u.role}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-card-foreground">
                           {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell className="space-x-2">
@@ -377,7 +377,7 @@ const Users = () => {
                   <Card key={u.id} className="shadow-sm">
                     <CardContent className="p-4 space-y-2">
                       <div className="flex justify-between items-start">
-                        <p className="font-semibold text-base truncate">{u.first_name} {u.last_name || ''}</p>
+                        <p className="font-semibold text-base truncate text-card-foreground">{u.first_name} {u.last_name || ''}</p>
                         <Badge variant={u.role === "colaborador" ? "secondary" : "default"} className="ml-2 flex-shrink-0">
                           {u.role}
                         </Badge>
@@ -477,7 +477,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Editar {user.first_name}</DialogTitle>
+          <DialogTitle className="text-card-foreground">Editar {user.first_name}</DialogTitle>
           <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleEditSubmit} className="space-y-4">
