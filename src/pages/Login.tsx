@@ -48,7 +48,7 @@ const Login = () => {
         <CardHeader className="space-y-4 pt-8">
           <div className="flex justify-center">
             {/* Referência atualizada para logo.png */}
-            <img src="/logo.png" alt="Logo da Empresa" className="h-16 w-auto" />
+            <img src="logo.png" alt="Logo da Empresa" className="h-16 w-auto" />
           </div>
           <CardTitle className="text-3xl text-center text-card-foreground">Acesso ao Painel</CardTitle>
           <CardDescription className="text-center text-muted-foreground">
