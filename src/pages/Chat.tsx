@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Loader2, User } from 'lucide-react';
+import { MessageSquare, Send, Loader2, User, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { showSuccess, showError } from '@/utils/toast';
@@ -42,29 +42,25 @@ const fetchUsersForChat = async (currentUserId: string): Promise<ChatUser[]> => 
   }));
 };
 
-const fetchMessages = async (senderId: string, recipientId: string | null): Promise<Message[]> => {
-  let query = supabase
+const fetchMessages = async (senderId: string, recipientId: string): Promise<Message[]> => {
+  if (!recipientId) return []; // Não carrega mensagens se não houver destinatário selecionado
+
+  // Filtra mensagens entre os dois usuários (sender <-> recipient)
+  const { data, error } = await supabase
     .from('messages')
     .select(`
       *,
       profiles(first_name, email)
     `)
-    .order('created_at', { ascending: true });
+    .or(`and(sender_id.eq.${senderId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${senderId})`)
+    .order('created_at', { ascending: true })
+    .limit(50);
 
-  if (recipientId) {
-    // Filtra mensagens entre os dois usuários (sender <-> recipient)
-    query = query.or(`and(sender_id.eq.${senderId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${senderId})`);
-  } else {
-    // Chat Global (simplesmente todas as mensagens onde recipient_id é NULL)
-    query = query.is('recipient_id', null);
-  }
-
-  const { data, error } = await query.limit(50);
   if (error) throw error;
   return data as Message[];
 };
 
-const sendMessage = async (content: string, recipientId: string | null) => {
+const sendMessage = async (content: string, recipientId: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   const senderId = user?.id;
   if (!senderId) throw new Error("Usuário não autenticado.");
@@ -92,11 +88,18 @@ const Chat = () => {
     enabled: !!user,
   });
 
+  // Define o primeiro usuário como destinatário padrão se nenhum estiver selecionado
+  useEffect(() => {
+    if (!selectedRecipient && chatUsers && chatUsers.length > 0) {
+      setSelectedRecipient(chatUsers[0]);
+    }
+  }, [chatUsers, selectedRecipient]);
+
   // Fetch mensagens do chat selecionado
   const { data: messages, isLoading: messagesLoading, refetch } = useQuery({
-    queryKey: ["messages", selectedRecipient?.id || 'global'],
-    queryFn: () => fetchMessages(currentUserId, selectedRecipient?.id || null),
-    enabled: !!user,
+    queryKey: ["messages", selectedRecipient?.id],
+    queryFn: () => fetchMessages(currentUserId, selectedRecipient?.id || ''),
+    enabled: !!user && !!selectedRecipient,
   });
 
   // Subscription para mensagens em tempo real
@@ -110,15 +113,24 @@ const Chat = () => {
         schema: 'public', 
         table: 'messages' 
       }, (payload) => {
-        // Invalida a query para buscar a nova mensagem
-        queryClient.invalidateQueries({ queryKey: ["messages", selectedRecipient?.id || 'global'] });
+        const newMessage = payload.new as Message;
+        
+        // Invalida a query APENAS se a mensagem for para o chat atual (privado)
+        const isRelevant = (
+          (newMessage.sender_id === currentUserId && newMessage.recipient_id === selectedRecipient?.id) ||
+          (newMessage.sender_id === selectedRecipient?.id && newMessage.recipient_id === currentUserId)
+        );
+
+        if (isRelevant) {
+          queryClient.invalidateQueries({ queryKey: ["messages", selectedRecipient?.id] });
+        }
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, selectedRecipient?.id, queryClient]);
+  }, [user, selectedRecipient?.id, currentUserId, queryClient]);
   
   // Scroll para o final das mensagens
   useEffect(() => {
@@ -126,7 +138,7 @@ const Chat = () => {
   }, [messages]);
 
   const sendMutation = useMutation({
-    mutationFn: (content: string) => sendMessage(content, selectedRecipient?.id || null),
+    mutationFn: (content: string) => sendMessage(content, selectedRecipient!.id),
     onSuccess: () => {
       setMessageContent('');
       // A subscription deve cuidar do refetch, mas forçamos para garantir
@@ -137,16 +149,27 @@ const Chat = () => {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (messageContent.trim() && !sendMutation.isPending) {
+    if (messageContent.trim() && selectedRecipient && !sendMutation.isPending) {
       sendMutation.mutate(messageContent.trim());
     }
   };
 
-  const recipientName = selectedRecipient ? selectedRecipient.name : 'Chat Global';
+  const recipientName = selectedRecipient ? selectedRecipient.name : 'Selecione um Contato';
 
   return (
     <div className="w-full flex flex-col md:flex-row h-[calc(100vh-100px)]">
       
+      {/* Título */}
+      <div className="mb-6 md:hidden">
+        <div className="flex items-center space-x-3">
+          <MessageSquare className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Chat Interno</h1>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1">
+          Comunicação direta entre colaboradores e gestores.
+        </p>
+      </div>
+
       {/* Sidebar de Usuários */}
       <Card className="w-full md:w-64 flex-shrink-0 mb-4 md:mb-0 md:mr-4">
         <CardHeader className="p-4 border-b">
@@ -156,15 +179,6 @@ const Chat = () => {
         </CardHeader>
         <ScrollArea className="h-full max-h-[300px] md:max-h-[calc(100vh-160px)]">
           <div className="p-2 space-y-1">
-            {/* Chat Global */}
-            <Button
-              variant={!selectedRecipient ? "default" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => setSelectedRecipient(null)}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" /> Chat Global
-            </Button>
-            
             {usersLoading ? (
               <div className="p-2 text-center"><Loader2 className="h-4 w-4 animate-spin mx-auto" /></div>
             ) : (
@@ -191,7 +205,11 @@ const Chat = () => {
         
         <CardContent className="flex-1 p-4 overflow-hidden">
           <ScrollArea className="h-full pr-4">
-            {messagesLoading ? (
+            {!selectedRecipient ? (
+              <div className="flex justify-center items-center h-full text-muted-foreground">
+                <MessageCircle className="h-6 w-6 mr-2" /> Selecione um contato para iniciar a conversa.
+              </div>
+            ) : messagesLoading ? (
               <div className="flex justify-center items-center h-full">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -225,12 +243,12 @@ const Chat = () => {
         <CardFooter className="p-4 border-t">
           <form onSubmit={handleSendMessage} className="flex w-full space-x-2">
             <Input
-              placeholder="Digite sua mensagem..."
+              placeholder={selectedRecipient ? "Digite sua mensagem..." : "Selecione um contato primeiro"}
               value={messageContent}
               onChange={(e) => setMessageContent(e.target.value)}
-              disabled={sendMutation.isPending}
+              disabled={sendMutation.isPending || !selectedRecipient}
             />
-            <Button type="submit" size="icon" disabled={sendMutation.isPending}>
+            <Button type="submit" size="icon" disabled={sendMutation.isPending || !selectedRecipient}>
               {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>

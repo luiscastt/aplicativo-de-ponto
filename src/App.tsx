@@ -18,9 +18,10 @@ const Users = React.lazy(() => import("./pages/Users"));
 const Settings = React.lazy(() => import("./pages/Settings"));
 const Reports = React.lazy(() => import("./pages/Reports"));
 const Audit = React.lazy(() => import("./pages/Audit"));
-const Absences = React.lazy(() => import("./pages/Absences")); // Novo
-const Devices = React.lazy(() => import("./pages/Devices")); // Novo
-const Chat = React.lazy(() => import("./pages/Chat")); // Novo
+const Absences = React.lazy(() => import("./pages/Absences"));
+const Devices = React.lazy(() => import("./pages/Devices"));
+const Chat = React.lazy(() => import("./pages/Chat"));
+const Announcements = React.lazy(() => import("./pages/Announcements")); // Novo
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
                   <Route path="/absences" element={<Absences />} />
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/chat" element={<Chat />} />
+                  <Route path="/announcements" element={<Announcements />} />
                 </Route>
               </Route>
               
