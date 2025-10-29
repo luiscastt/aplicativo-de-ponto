@@ -16,6 +16,8 @@ export default defineConfig(() => ({
     },
   },
   build: {
+    // Adicionando publicPath explícito, embora 'base: ./' já deva fazer isso
+    // publicPath: './', 
     rollupOptions: {
       output: {
         // Configuração para code splitting manual
