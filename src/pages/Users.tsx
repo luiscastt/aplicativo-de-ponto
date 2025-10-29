@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { UserPlus, Edit, Trash2, Search, Loader2, RefreshCw } from "lucide-react
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateUserResponse, Profile } from "@/types";
+import EditUserDialog from "@/components/EditUserDialog";
 import React from "react";
 
 interface UserFormData {
@@ -30,7 +31,7 @@ interface UsersData {
 const fetchUsers = async (searchTerm?: string, page = 1, pageSize = 10): Promise<UsersData> => {
   let query = supabase
     .from('profiles')
-    .select('*', { count: 'exact', head: true })
+    .select('*', { count: 'exact' })
     .order('first_name', { ascending: true });
 
   if (searchTerm?.trim()) {
@@ -52,118 +53,19 @@ const createUserViaFunction = async (userData: UserFormData): Promise<CreateUser
   return data as CreateUserResponse;
 };
 
-const updateUserProfile = async (userId: string, data: Partial<UserFormData>) => {
-  const { error } = await supabase
-    .from('profiles')
-    .update({ 
-      first_name: data.first_name,
-      role: data.role,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', userId);
-  if (error) throw error;
-  
-  await supabase.from('audit_logs').insert({
-    user_id: userId,
-    action: 'perfil_atualizado',
-    details: { updated_fields: Object.keys(data) }
+const deleteUserViaFunction = async (userId: string): Promise<CreateUserResponse> => {
+  const { data, error } = await supabase.functions.invoke('delete-user', {
+    body: { user_id: userId },
   });
-  
-  return { success: true, message: 'Perfil atualizado!' };
-};
-
-// Componente auxiliar para o Diálogo de Edição
-interface EditUserDialogProps {
-  user: Profile;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  handleEdit: (user: Profile) => void;
-  handleEditSubmit: (e: React.FormEvent) => void;
-  editingUser: Partial<Profile> | null;
-  updateMutation: ReturnType<typeof useMutation<any, any, { userId: string; data: Partial<UserFormData>; }>>;
-}
-
-const EditUserDialog: React.FC<EditUserDialogProps> = ({
-  user,
-  isEditDialogOpen,
-  setIsEditDialogOpen,
-  handleEdit,
-  handleEditSubmit,
-  editingUser,
-  updateMutation
-}) => {
-  return (
-    <Dialog 
-      open={isEditDialogOpen} 
-      onOpenChange={(open) => {
-        setIsEditDialogOpen(open);
-        if (!open) {
-          // A lógica de reset deve ser feita no componente pai (Users)
-        }
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
-          <Edit className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="text-card-foreground">Editar {user.first_name}</DialogTitle>
-          <DialogDescription>Atualize nome e role. A senha permanece a mesma.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleEditSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit_first_name">Nome Completo</Label>
-            <Input 
-              id="edit_first_name" 
-              name="edit_first_name" // Corrigido o nome do campo para evitar conflito
-              defaultValue={editingUser?.first_name} 
-              required 
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Email (não editável)</Label>
-            <Input value={user.email} disabled className="bg-gray-100" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit_role">Role</Label>
-            <Select name="edit_role" defaultValue={editingUser?.role || user.role}>
-              <SelectTrigger id="edit_role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="colaborador">Colaborador</SelectItem>
-                <SelectItem value="gestor">Gestor</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter>
-            <Button type="submit" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                "Salvar Alterações"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+  if (error) throw error;
+  return data as CreateUserResponse;
 };
 
 
 const Users = () => {
   const { user: currentUser } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<Partial<Profile> | null>(null);
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -176,6 +78,7 @@ const Users = () => {
 
   const users = data?.users || [];
   const total = data?.total || 0;
+  const totalPages = useMemo(() => Math.ceil(total / pageSize), [total, pageSize]);
 
   const createMutation = useMutation({
     mutationFn: createUserViaFunction,
@@ -192,15 +95,15 @@ const Users = () => {
     onError: (error: any) => showError(`Erro: ${error.message}`),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ userId, data }: { userId: string; data: Partial<UserFormData> }) => 
-      updateUserProfile(userId, data),
-    onSuccess: (response) => {
-      showSuccess(response.message || "Perfil atualizado!");
-      setIsEditDialogOpen(false);
-      setEditingUser(null);
-      setEditingUserId(null);
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+  const deleteMutation = useMutation({
+    mutationFn: deleteUserViaFunction,
+    onSuccess: (response, variables) => {
+      if (response.success) {
+        showSuccess(response.message || `Usuário removido com sucesso!`);
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+      } else {
+        showError(response.error || "Erro ao remover usuário.");
+      }
     },
     onError: (error: any) => showError(`Erro: ${error.message}`),
   });
@@ -231,58 +134,26 @@ const Users = () => {
     createMutation.mutate(formData);
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingUser || !editingUserId) return;
-    
-    const form = e.currentTarget as HTMLFormElement;
-    const updateData: Partial<UserFormData> = {
-      first_name: (form.elements.namedItem("edit_first_name") as HTMLInputElement).value.trim(),
-      role: (form.elements.namedItem("edit_role") as HTMLSelectElement).value as UserFormData['role'],
-    };
-
-    if (!updateData.first_name) {
-      showError("Nome é obrigatório.");
+  const handleDelete = (user: Profile) => {
+    if (user.id === currentUser?.id) {
+      showError("Você não pode deletar sua própria conta através do painel.");
       return;
     }
-
-    updateMutation.mutate({ userId: editingUserId, data: updateData });
-  };
-
-  const handleEdit = (user: Profile) => {
-    setEditingUser({
-      first_name: user.first_name || '',
-      email: user.email,
-      role: user.role,
-    });
-    setEditingUserId(user.id);
-    // Não abrimos o diálogo aqui, pois ele é aberto pelo DialogTrigger.
-    // Apenas preparamos o estado.
-  };
-
-  const handleDelete = async (userId: string, email: string) => {
-    if (!confirm(`Confirmar remoção de ${email}? Isso deletará o perfil e a conta de autenticação.`)) {
+    if (!confirm(`Confirmar remoção de ${user.email}? Isso deletará o perfil e a conta de autenticação.`)) {
       return;
     }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('delete-user', {
-        body: { user_id: userId },
-      });
-      
-      if (error) throw error;
-      if (data.success) {
-        showSuccess(`Usuário ${email} removido com sucesso!`);
-        queryClient.invalidateQueries({ queryKey: ["users"] });
-      } else {
-        showError(data.error || "Erro ao remover usuário.");
-      }
-    } catch (error: any) {
-      showError(`Erro: ${error.message}`);
-    }
+    deleteMutation.mutate(user.id);
   };
 
-  const totalPages = Math.ceil(total / pageSize);
+  const handleEditClick = (user: Profile) => {
+    setEditingUser(user);
+  };
+
+  const handleEditSuccess = () => {
+    showSuccess("Perfil atualizado!");
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+  };
+
   const canCreate = currentUser?.role === 'gestor' || currentUser?.role === 'admin';
 
   if (!canCreate) {
@@ -437,20 +308,15 @@ const Users = () => {
                           {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell className="space-x-2">
-                          <EditUserDialog 
-                            user={u} 
-                            isEditDialogOpen={isEditDialogOpen && editingUserId === u.id}
-                            setIsEditDialogOpen={setIsEditDialogOpen}
-                            handleEdit={handleEdit}
-                            handleEditSubmit={handleEditSubmit}
-                            editingUser={editingUser}
-                            updateMutation={updateMutation}
-                          />
+                          <Button variant="ghost" size="sm" onClick={() => handleEditClick(u)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => handleDelete(u.id, u.email || 'usuário')}
+                            onClick={() => handleDelete(u)}
                             className="text-red-600 hover:text-red-800"
+                            disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -475,20 +341,15 @@ const Users = () => {
                       <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                       <p className="text-xs text-muted-foreground">Atualizado em: {new Date(u.updated_at || '').toLocaleDateString('pt-BR')}</p>
                       <div className="flex justify-end space-x-2 pt-2">
-                        <EditUserDialog 
-                          user={u} 
-                          isEditDialogOpen={isEditDialogOpen && editingUserId === u.id}
-                          setIsEditDialogOpen={setIsEditDialogOpen}
-                          handleEdit={handleEdit}
-                          handleEditSubmit={handleEditSubmit}
-                          editingUser={editingUser}
-                          updateMutation={updateMutation}
-                        />
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(u)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => handleDelete(u.id, u.email || 'usuário')}
+                          onClick={() => handleDelete(u)}
                           className="text-red-600 hover:text-red-800"
+                          disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -525,6 +386,16 @@ const Users = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Diálogo de Edição Centralizado */}
+      <EditUserDialog 
+        user={editingUser}
+        isOpen={!!editingUser}
+        onOpenChange={(open) => {
+          if (!open) setEditingUser(null);
+        }}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 };
