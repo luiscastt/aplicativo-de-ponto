@@ -36,19 +36,18 @@ const fetchAbsences = async (isGestor: boolean): Promise<Absence[]> => {
   let query = supabase
     .from('absences')
     .select(`
-      *,
+      id, user_id, type, start_date, end_date, reason, status,
       profiles(first_name, email)
-    `)
+    `) // Explicitly selecting columns
     .order('created_at', { ascending: false });
     
   if (!isGestor && user) {
-    // RLS já deve filtrar, mas adicionamos a cláusula para clareza
     query = query.eq('user_id', user.id);
   }
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as Absence[];
+  return data as unknown as Absence[];
 };
 
 const updateAbsenceStatus = async (id: string, status: 'aprovado' | 'rejeitado') => {
@@ -82,8 +81,13 @@ const Absences = () => {
   const { user } = useAuth() as { user: Profile | null };
   const queryClient = useQueryClient();
   const isGestorOrAdmin = user?.role === 'gestor' || user?.role === 'admin';
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newAbsenceType, setNewAbsenceType] = useState<Absence['type'] | undefined>(undefined);
+  const [newAbsenceStartDate, setNewAbsenceStartDate] = useState<Date | undefined>(undefined);
+  const [newAbsenceEndDate, setNewAbsenceEndDate] = useState<Date | undefined>(undefined);
+  const [newAbsenceReason, setNewAbsenceReason] = useState('');
+
   const { data: absences, isLoading, refetch } = useQuery({
     queryKey: ["absences", isGestorOrAdmin],
     queryFn: () => fetchAbsences(isGestorOrAdmin),
@@ -104,6 +108,11 @@ const Absences = () => {
     onSuccess: () => {
       showSuccess("Solicitação de ausência enviada com sucesso!");
       setIsCreateDialogOpen(false);
+      // Reset form state
+      setNewAbsenceType(undefined);
+      setNewAbsenceStartDate(undefined);
+      setNewAbsenceEndDate(undefined);
+      setNewAbsenceReason('');
       queryClient.invalidateQueries({ queryKey: ["absences"] });
     },
     onError: (error: any) => showError(`Erro ao solicitar ausência: ${error.message}`),
@@ -111,24 +120,17 @@ const Absences = () => {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const form = e.currentTarget as HTMLFormElement;
-    const formData = new FormData(form);
     
-    const startDate = formData.get('start_date') as string;
-    const endDate = formData.get('end_date') as string;
-    const type = formData.get('type') as Absence['type'];
-    const reason = formData.get('reason') as string;
-
-    if (!startDate || !endDate || !type) {
-      showError("Preencha todos os campos obrigatórios.");
+    if (!newAbsenceStartDate || !newAbsenceEndDate || !newAbsenceType) {
+      showError("Preencha todos os campos obrigatórios (Tipo, Início e Fim).");
       return;
     }
     
     createMutation.mutate({
-      start_date: startDate,
-      end_date: endDate,
-      type,
-      reason,
+      start_date: format(newAbsenceStartDate, 'yyyy-MM-dd'),
+      end_date: format(newAbsenceEndDate, 'yyyy-MM-dd'),
+      type: newAbsenceType,
+      reason: newAbsenceReason,
     });
   };
 
@@ -246,7 +248,12 @@ const Absences = () => {
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="type">Tipo de Ausência</Label>
-                <Select name="type" required>
+                <Select 
+                  name="type" 
+                  required 
+                  value={newAbsenceType}
+                  onValueChange={(value) => setNewAbsenceType(value as Absence['type'])}
+                >
                   <SelectTrigger id="type">
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
@@ -267,30 +274,23 @@ const Absences = () => {
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !createMutation.variables?.start_date && "text-muted-foreground"
+                          !newAbsenceStartDate && "text-muted-foreground"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {createMutation.variables?.start_date ? format(new Date(createMutation.variables.start_date), "PPP", { locale: ptBR }) : <span>Selecione</span>}
+                        {newAbsenceStartDate ? format(newAbsenceStartDate, "PPP", { locale: ptBR }) : <span>Selecione</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
-                        selected={createMutation.variables?.start_date ? new Date(createMutation.variables.start_date) : undefined}
-                        onSelect={(date) => {
-                          // Simulação de atualização de estado para o formulário
-                          const form = document.getElementById('absence-form') as HTMLFormElement;
-                          if (form) {
-                            (form.elements.namedItem('start_date') as HTMLInputElement).value = date?.toISOString().split('T')[0] || '';
-                          }
-                        }}
+                        selected={newAbsenceStartDate}
+                        onSelect={setNewAbsenceStartDate}
                         initialFocus
                         locale={ptBR}
                       />
                     </PopoverContent>
                   </Popover>
-                  <input type="hidden" name="start_date" id="start_date" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="end_date">Data Fim</Label>
@@ -300,40 +300,42 @@ const Absences = () => {
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !createMutation.variables?.end_date && "text-muted-foreground"
+                          !newAbsenceEndDate && "text-muted-foreground"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {createMutation.variables?.end_date ? format(new Date(createMutation.variables.end_date), "PPP", { locale: ptBR }) : <span>Selecione</span>}
+                        {newAbsenceEndDate ? format(newAbsenceEndDate, "PPP", { locale: ptBR }) : <span>Selecione</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
-                        selected={createMutation.variables?.end_date ? new Date(createMutation.variables.end_date) : undefined}
-                        onSelect={(date) => {
-                          // Simulação de atualização de estado para o formulário
-                          const form = document.getElementById('absence-form') as HTMLFormElement;
-                          if (form) {
-                            (form.elements.namedItem('end_date') as HTMLInputElement).value = date?.toISOString().split('T')[0] || '';
-                          }
-                        }}
+                        selected={newAbsenceEndDate}
+                        onSelect={setNewAbsenceEndDate}
                         initialFocus
                         locale={ptBR}
+                        disabled={(date) => newAbsenceStartDate ? date < newAbsenceStartDate : false}
                       />
                     </PopoverContent>
                   </Popover>
-                  <input type="hidden" name="end_date" id="end_date" required />
                 </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="reason">Motivo (Opcional)</Label>
-                <Input id="reason" name="reason" />
+                <Input 
+                  id="reason" 
+                  name="reason" 
+                  value={newAbsenceReason}
+                  onChange={(e) => setNewAbsenceReason(e.target.value)}
+                />
               </div>
 
               <DialogFooter>
-                <Button type="submit" disabled={createMutation.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={createMutation.isPending || !newAbsenceStartDate || !newAbsenceEndDate || !newAbsenceType}
+                >
                   {createMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

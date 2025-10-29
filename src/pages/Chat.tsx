@@ -49,15 +49,15 @@ const fetchMessages = async (senderId: string, recipientId: string): Promise<Mes
   const { data, error } = await supabase
     .from('messages')
     .select(`
-      *,
+      id, sender_id, recipient_id, content, created_at,
       profiles(first_name, email)
-    `)
+    `) // Explicitly selecting columns
     .or(`and(sender_id.eq.${senderId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${senderId})`)
     .order('created_at', { ascending: true })
     .limit(50);
 
   if (error) throw error;
-  return data as Message[];
+  return data as unknown as Message[];
 };
 
 const sendMessage = async (content: string, recipientId: string) => {

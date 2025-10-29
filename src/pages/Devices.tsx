@@ -27,9 +27,9 @@ const fetchDevices = async (isGestor: boolean): Promise<Device[]> => {
   let query = supabase
     .from('active_devices')
     .select(`
-      *,
+      id, user_id, device_id, device_model, last_login, is_active,
       profiles(first_name, email)
-    `)
+    `) // Explicitly selecting columns
     .order('last_login', { ascending: false });
     
   if (!isGestor && user) {
@@ -38,7 +38,7 @@ const fetchDevices = async (isGestor: boolean): Promise<Device[]> => {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as Device[];
+  return data as unknown as Device[];
 };
 
 const updateDeviceStatus = async (deviceId: string, isActive: boolean) => {

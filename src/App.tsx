@@ -23,7 +23,14 @@ const Devices = React.lazy(() => import("./pages/Devices"));
 const Chat = React.lazy(() => import("./pages/Chat"));
 const Announcements = React.lazy(() => import("./pages/Announcements")); // Novo
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes cache time for most queries
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches when switching tabs
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

@@ -31,7 +31,7 @@ interface UsersData {
 const fetchUsers = async (searchTerm?: string, page = 1, pageSize = 10): Promise<UsersData> => {
   let query = supabase
     .from('profiles')
-    .select('*', { count: 'exact' })
+    .select('id, first_name, last_name, email, role, updated_at', { count: 'exact' }) // Explicitly selecting columns
     .order('first_name', { ascending: true });
 
   if (searchTerm?.trim()) {

@@ -28,14 +28,14 @@ const fetchAnnouncements = async (): Promise<Announcement[]> => {
   const { data, error } = await supabase
     .from('announcements')
     .select(`
-      *,
+      id, user_id, title, content, created_at,
       profiles(first_name, email)
-    `)
+    `) // Explicitly selecting columns
     .order('created_at', { ascending: false })
     .limit(20);
 
   if (error) throw error;
-  return data as Announcement[];
+  return data as unknown as Announcement[];
 };
 
 const createAnnouncement = async (title: string, content: string) => {

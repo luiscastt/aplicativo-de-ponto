@@ -23,15 +23,12 @@ interface PointRecord {
 
 // Fetch recent points
 const fetchRecentRecords = async (): Promise<PointRecord[]> => {
-  // Adicionando um pequeno delay para simular latência e testar o loader
-  // await new Promise(resolve => setTimeout(resolve, 500)); 
-  
   const { data, error } = await supabase
     .from('points')
     .select(`
-      *,
+      id, type, timestamp, location, photo_url, status,
       profiles(first_name, last_name, email)
-    `)
+    `) // Explicitly selecting columns for efficiency
     .order('timestamp', { ascending: false })
     .limit(10);
   if (error) throw error;
