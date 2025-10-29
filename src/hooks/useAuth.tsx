@@ -61,13 +61,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-      if (session?.user?.id) {
-        fetchProfile(session.user.id);
-      }
-    });
+    // Adicionando tratamento de erro na chamada inicial
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        if (session?.user?.id) {
+          fetchProfile(session.user.id);
+        }
+      })
+      .catch((err) => {
+        console.error("[Auth] Failed to get initial session:", err);
+        // Se falhar, garantimos que o loading termine para que a UI possa prosseguir
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
