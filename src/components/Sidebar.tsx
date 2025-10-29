@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Clock, BarChart3, Settings, Users, LogOut, Menu, ScrollText, X } from "lucide-react";
+import { Clock, BarChart3, Settings, Users, LogOut, Menu, ScrollText, X, Plane, Smartphone, MessageSquare } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
@@ -25,8 +25,11 @@ const Sidebar = () => {
   
   const menuItems = [
     { path: "/dashboard", icon: Clock, label: "Dashboard" },
-    { path: "/reports", icon: BarChart3, label: "Relatórios" },
-    { path: "/users", icon: Users, label: "Usuários" },
+    { path: "/reports", icon: BarChart3, label: "Relatórios/BI" },
+    { path: "/absences", icon: Plane, label: "Férias/Afast." },
+    { path: "/devices", icon: Smartphone, label: "Dispositivos" },
+    { path: "/chat", icon: MessageSquare, label: "Chat Interno" },
+    { path: "/users", icon: Users, label: "Gestão de Usuários" },
     { path: "/audit", icon: ScrollText, label: "Auditoria" },
     { path: "/settings", icon: Settings, label: "Configurações" },
   ];
