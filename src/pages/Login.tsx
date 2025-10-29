@@ -15,14 +15,10 @@ const Login = () => {
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const { toast } = useToast();
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // O estado 'loading' foi removido do useState, mas mantive a variável localmente para evitar erros de linting.
-    // Vou reintroduzir o setLoading para que o botão funcione corretamente.
-    // Revertendo a mudança de 'const [loading] = useState(false);' para 'const [loading, setLoading] = useState(false);'
-    // para garantir a funcionalidade correta do formulário.
     setLoading(true);
     try {
       const formData = new FormData(e.currentTarget as HTMLFormElement);
