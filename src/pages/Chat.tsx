@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { showSuccess, showError } from '@/utils/toast';
 import type { Profile } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -64,7 +65,8 @@ const fetchMessages = async (senderId: string, recipientId: string | null): Prom
 };
 
 const sendMessage = async (content: string, recipientId: string | null) => {
-  const senderId = supabase.auth.currentUser?.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  const senderId = user?.id;
   if (!senderId) throw new Error("Usuário não autenticado.");
 
   const { error } = await supabase

@@ -31,6 +31,8 @@ interface Absence {
 }
 
 const fetchAbsences = async (isGestor: boolean): Promise<Absence[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
   let query = supabase
     .from('absences')
     .select(`
@@ -39,9 +41,9 @@ const fetchAbsences = async (isGestor: boolean): Promise<Absence[]> => {
     `)
     .order('created_at', { ascending: false });
     
-  if (!isGestor) {
+  if (!isGestor && user) {
     // RLS já deve filtrar, mas adicionamos a cláusula para clareza
-    query = query.eq('user_id', supabase.auth.currentUser?.id);
+    query = query.eq('user_id', user.id);
   }
 
   const { data, error } = await query;
@@ -58,7 +60,8 @@ const updateAbsenceStatus = async (id: string, status: 'aprovado' | 'rejeitado')
 };
 
 const createAbsence = async (data: Omit<Absence, 'id' | 'status' | 'user_id' | 'profiles'>) => {
-  const userId = supabase.auth.currentUser?.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
   if (!userId) throw new Error("Usuário não autenticado.");
   
   const { error } = await supabase

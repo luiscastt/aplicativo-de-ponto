@@ -22,6 +22,8 @@ interface Device {
 }
 
 const fetchDevices = async (isGestor: boolean): Promise<Device[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
   let query = supabase
     .from('active_devices')
     .select(`
@@ -30,8 +32,8 @@ const fetchDevices = async (isGestor: boolean): Promise<Device[]> => {
     `)
     .order('last_login', { ascending: false });
     
-  if (!isGestor) {
-    query = query.eq('user_id', supabase.auth.currentUser?.id);
+  if (!isGestor && user) {
+    query = query.eq('user_id', user.id);
   }
 
   const { data, error } = await query;
