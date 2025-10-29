@@ -6,7 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import React from "react";
 
 // Tipagem para o registro de ponto
 interface PointRecord {
@@ -21,6 +23,9 @@ interface PointRecord {
 
 // Fetch recent points
 const fetchRecentRecords = async (): Promise<PointRecord[]> => {
+  // Adicionando um pequeno delay para simular latência e testar o loader
+  // await new Promise(resolve => setTimeout(resolve, 500)); 
+  
   const { data, error } = await supabase
     .from('points')
     .select(`
@@ -55,10 +60,11 @@ const Dashboard = () => {
   const { data: records, isLoading, refetch } = useQuery({
     queryKey: ["recentRecords"],
     queryFn: fetchRecentRecords,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !profileLoading, // Só busca se estiver autenticado e o perfil carregado
   });
 
-  if (profileLoading || isLoading) {
+  // Se o perfil ainda estiver carregando, mostramos o loader de tela cheia (vindo do ProtectedRoute/SuspenseLoader)
+  if (profileLoading) {
     return (
       <div className="flex justify-center items-center h-full min-h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -68,14 +74,129 @@ const Dashboard = () => {
 
   const userName = user?.first_name || user?.email?.split('@')[0] || 'Gestor';
 
+  const renderTableContent = () => {
+    if (isLoading) {
+      return (
+        <div className="py-8">
+          <div className="flex justify-center mb-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (!records || records.length === 0) {
+      return (
+        <div className="text-left text-muted-foreground py-8">
+          Nenhum registro recente encontrado.
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {/* Desktop Table View */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Colaborador</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Horário</TableHead>
+                <TableHead>Localização</TableHead>
+                <TableHead>Foto</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {records.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell className="font-medium text-card-foreground">{record.user}</TableCell>
+                  <TableCell>
+                    <Badge variant={record.type === "entrada" ? "default" : "secondary"}>
+                      {record.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-card-foreground">{new Date(record.timestamp).toLocaleString("pt-BR")}</TableCell>
+                  <TableCell className="font-mono text-xs text-card-foreground">
+                    {`${record.location?.latitude?.toFixed(4) || 'N/A'}, ${record.location?.longitude?.toFixed(4) || 'N/A'}`}
+                  </TableCell>
+                  <TableCell>
+                    {record.photoUrl ? (
+                      <a 
+                        href={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <img src={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} alt="Foto" className="w-8 h-8 rounded object-cover hover:opacity-75 transition-opacity" />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">N/A</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(record.status)}>
+                      {record.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Mobile List View */}
+        <div className="md:hidden space-y-4">
+          {records.map((record) => (
+            <Card key={record.id} className="shadow-sm">
+              <CardContent className="p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <p className="font-semibold text-base truncate text-card-foreground">{record.user}</p>
+                  <Badge variant={getStatusVariant(record.status)} className="ml-2 flex-shrink-0">
+                    {record.status}
+                  </Badge>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p>Tipo: <Badge variant={record.type === "entrada" ? "default" : "secondary"}>{record.type}</Badge></p>
+                  <p>Horário: {new Date(record.timestamp).toLocaleString("pt-BR")}</p>
+                  <p className="truncate">Local: {`${record.location?.latitude?.toFixed(4) || 'N/A'}, ${record.location?.longitude?.toFixed(4) || 'N/A'}`}</p>
+                </div>
+                {record.photoUrl && (
+                  <div className="pt-2">
+                    <a 
+                      href={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline text-sm"
+                    >
+                      Ver Foto
+                    </a>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="w-full">
       {/* Título e Conteúdo Alinhados à Esquerda (usando o padding do MainLayout) */}
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Bem-vindo, {userName}
-        </h1>
-        <p className="text-sm text-muted-foreground">
+        <div className="flex items-center space-x-3">
+          <Clock className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            Bem-vindo, {userName}
+          </h1>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1">
           Monitore registros recentes dos colaboradores.
         </p>
       </div>
@@ -92,101 +213,7 @@ const Dashboard = () => {
           </Button>
         </CardHeader>
         <CardContent>
-          {/* Desktop Table View */}
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Colaborador</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Horário</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Foto</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records?.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="font-medium text-card-foreground">{record.user}</TableCell>
-                    <TableCell>
-                      <Badge variant={record.type === "entrada" ? "default" : "secondary"}>
-                        {record.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-card-foreground">{new Date(record.timestamp).toLocaleString("pt-BR")}</TableCell>
-                    <TableCell className="font-mono text-xs text-card-foreground">
-                      {`${record.location?.latitude?.toFixed(4) || 'N/A'}, ${record.location?.longitude?.toFixed(4) || 'N/A'}`}
-                    </TableCell>
-                    <TableCell>
-                      {record.photoUrl ? (
-                        <a 
-                          href={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                        >
-                          <img src={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} alt="Foto" className="w-8 h-8 rounded object-cover hover:opacity-75 transition-opacity" />
-                        </a>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">N/A</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(record.status)}>
-                        {record.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {(!records || records.length === 0) && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-left text-muted-foreground py-8">
-                      Nenhum registro recente encontrado.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Mobile List View */}
-          <div className="md:hidden space-y-4">
-            {records?.length === 0 ? (
-              <div className="text-left text-muted-foreground py-8">
-                Nenhum registro recente encontrado.
-              </div>
-            ) : (
-              records?.map((record) => (
-                <Card key={record.id} className="shadow-sm">
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <p className="font-semibold text-base truncate text-card-foreground">{record.user}</p>
-                      <Badge variant={getStatusVariant(record.status)} className="ml-2 flex-shrink-0">
-                        {record.status}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      <p>Tipo: <Badge variant={record.type === "entrada" ? "default" : "secondary"}>{record.type}</Badge></p>
-                      <p>Horário: {new Date(record.timestamp).toLocaleString("pt-BR")}</p>
-                      <p className="truncate">Local: {`${record.location?.latitude?.toFixed(4) || 'N/A'}, ${record.location?.longitude?.toFixed(4) || 'N/A'}`}</p>
-                    </div>
-                    {record.photoUrl && (
-                      <div className="pt-2">
-                        <a 
-                          href={supabase.storage.from('point-photos').getPublicUrl(record.photoUrl).data.publicUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline text-sm"
-                        >
-                          Ver Foto
-                        </a>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+          {renderTableContent()}
         </CardContent>
       </Card>
     </div>
