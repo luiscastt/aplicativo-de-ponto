@@ -15,4 +15,27 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Configuração para code splitting manual
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Separa grandes dependências em chunks
+            if (id.includes('@supabase/supabase-js') || id.includes('@tanstack/react-query')) {
+              return 'vendor-supabase-query';
+            }
+            if (id.includes('react-router-dom') || id.includes('react-dom')) {
+              return 'vendor-react-router';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            // Coloca o resto das dependências em um chunk genérico
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
 }));

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecionando...</title>
+    <script>
+      // Redireciona para o index.html, preservando o caminho da URL
+      // O HashRouter usará o hash para rotear corretamente.
+      var path = window.location.pathname.replace(/\/$/, "");
+      var newPath = path.replace('/web-painel-ponto', ''); // Remove o prefixo do repositório
+      
+      // Se a URL não tiver hash, adiciona o hash da rota original
+      if (!window.location.hash) {
+        window.location.replace(
+          window.location.protocol + "//" + window.location.host + 
+          "/web-painel-ponto/index.html#" + newPath
+        );
+      } else {
+        // Se já tiver hash, apenas garante que o index.html seja carregado
+        window.location.replace(
+          window.location.protocol + "//" + window.location.host + 
+          "/web-painel-ponto/index.html" + window.location.hash
+        );
+      }
+    </script>
+  </head>
+  <body>
+    <p>Redirecionando para a página inicial...</p>
+  </body>
+</html>
