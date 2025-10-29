@@ -5,6 +5,12 @@ on:
     branches:
       - main # Dispara o workflow quando houver push na branch 'main'
 
+# Adiciona permissões de escrita para o GITHUB_TOKEN
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
