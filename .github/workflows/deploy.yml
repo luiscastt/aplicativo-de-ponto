@@ -38,3 +38,5 @@ jobs:
           publish_dir: ./dist # A pasta que contém os arquivos estáticos
           publish_branch: gh-pages # A branch que o GitHub Pages deve usar para servir o conteúdo
           cname: # Deixe vazio se não estiver usando domínio customizado
+          # Adicionando force_orphan para garantir que a branch gh-pages seja limpa a cada deploy
+          force_orphan: true

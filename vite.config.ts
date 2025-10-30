@@ -16,6 +16,7 @@ export default defineConfig(() => ({
     },
   },
   build: {
+    // O diretório de saída padrão é 'dist'
     // A configuração 'base: "./"' garante que todos os caminhos de assets gerados sejam relativos.
     rollupOptions: {
       output: {
