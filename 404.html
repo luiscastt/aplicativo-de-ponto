@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecionando...</title>
+    <script>
+      // Obtém o caminho completo (ex: /web-painel-ponto/dashboard)
+      var path = window.location.pathname;
+      
+      // Obtém o nome do repositório (ex: /web-painel-ponto)
+      // O caminho base é o primeiro segmento após a raiz, se houver.
+      var pathSegments = path.split('/').filter(segment => segment.length > 0);
+      var repoName = pathSegments.length > 0 ? '/' + pathSegments[0] : '';
+      
+      // Calcula a rota interna (ex: /dashboard)
+      var route = path.replace(repoName, '');
+      
+      // Remove o index.html ou 404.html se estiverem presentes
+      route = route.replace('/index.html', '').replace('/404.html', '');
+      
+      // Garante que a rota comece com /
+      if (route.length === 0 || route[0] !== '/') {
+          route = '/' + route;
+      }
+
+      // Se a URL não tiver hash, adiciona o hash da rota original
+      if (!window.location.hash) {
+        // Redireciona para o index.html no caminho base, adicionando a rota interna como hash
+        window.location.replace(
+          repoName + "/index.html#" + route
+        );
+      } else {
+        // Se já tiver hash, apenas garante que o index.html seja carregado
+        window.location.replace(
+          repoName + "/index.html" + window.location.hash
+        );
+      }
+    </script>
+  </head>
+  <body>
+    <p>Redirecionando para a página inicial...</p>
+  </body>
+</html>
