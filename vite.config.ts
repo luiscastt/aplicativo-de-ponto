@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig(() => ({
-  base: "./", // Usar caminhos relativos para garantir que funcione em subdiretórios (como no GitHub Pages)
+  base: "/web-painel-ponto/", // Usar o nome do repositório como base para caminhos absolutos
   server: {
     host: "::",
     port: 8080,
@@ -17,7 +17,6 @@ export default defineConfig(() => ({
   },
   build: {
     // O diretório de saída padrão é 'dist'
-    // A configuração 'base: "./"' garante que todos os caminhos de assets gerados sejam relativos.
     rollupOptions: {
       output: {
         // Configuração para code splitting manual
